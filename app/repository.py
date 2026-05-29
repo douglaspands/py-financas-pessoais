@@ -24,3 +24,7 @@ def listar_transacoes(ctx: Context, *, mes_filtro: str) -> list[Transacao]:
             select(Transacao).where(Transacao.fatura_mes == mes_filtro)
         ).all()
     )
+
+
+def limpar_transacoes(ctx: Context) -> None:
+    ctx.session.query(Transacao).delete()

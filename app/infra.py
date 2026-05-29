@@ -1,7 +1,7 @@
 import typer
 from fastapi import FastAPI
 
-from app import controller
+from app import cli, controller
 from app.database import init_db
 
 
@@ -18,4 +18,5 @@ def create_asgi() -> FastAPI:
 
 def create_cli() -> typer.Typer:
     app = typer.Typer(help="CLI utilitária para o sistema de Controle Financeiro.")
+    app.add_typer(cli.app)
     return app

@@ -37,7 +37,8 @@ def cadastrar_transacao(
     ctx: Context = Depends(get_context_from_request),
 ):
     with ctx.session.begin():
-        fatura = service.cadastrar_transacao(
+        # fatura = service.cadastrar_transacao(
+        service.cadastrar_transacao(
             ctx,
             descricao=descricao,
             valor=valor,
@@ -45,7 +46,8 @@ def cadastrar_transacao(
             categoria=categoria,
             parcelas=parcelas,
         )
-    return RedirectResponse(url=f"/?mes_filtro={fatura}", status_code=303)
+    # return RedirectResponse(url=f"/?mes_filtro={fatura}", status_code=303)
+    return RedirectResponse(url="/", status_code=303)
 
 
 # Rota simples para cadastrar contas (mantida igual)

@@ -15,3 +15,6 @@ class CategoriaTransacao(StrEnum):
     LAZER = "lazer"
     SAUDE = "saude"
     OUTROS = "outros"
+    REFEICAO = "refeicao"
+    EDUCACAO = "educacao"
+    VESTUARIO = "vestuario"
