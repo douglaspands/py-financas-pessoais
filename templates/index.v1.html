@@ -6,22 +6,11 @@
     <title>Finanças Mobile</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
     <style>
+        /* Ajuste fino para melhorar o espaçamento em telas de celular */
         @media (max-width: 768px) {
             .section { padding: 1.5rem 1rem; }
             .box { padding: 1.25rem; margin-bottom: 1rem; }
             .title.is-2 { font-size: 1.75rem; }
-        }
-        /* Estilo para deixar o cabeçalho do card com cara de clicável */
-        .card-header-toggle {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            user-select: none;
-        }
-        /* Classe utilitária para esconder o conteúdo quando minimizado */
-        .is-minimized {
-            display: none !important;
         }
     </style>
 </head>
@@ -55,12 +44,8 @@
             <div class="columns is-multiline">
                 <div class="column is-6-tablet is-12-mobile">
                     <div class="box">
-                        <div class="card-header-toggle" onclick="toggleCard('conteudo-categoria', 'btn-cat')">
-                            <h3 class="subtitle is-5 mb-0">Gastos por Categoria</h3>
-                            <button class="button is-small is-light" id="btn-cat">−</button>
-                        </div>
-                        <div id="conteudo-categoria" class="table-container mt-3">
-                            <table class="table is-fullwidth is-narrow is-striped">
+                        <h3 class="subtitle is-5">Gastos por Categoria</h3>
+                        <div class="table-container"> <table class="table is-fullwidth is-narrow is-striped">
                                 <tbody>
                                     {% for cat, total in resumo_categorias.items() %}
                                     <tr>
@@ -78,11 +63,8 @@
                 
                 <div class="column is-6-tablet is-12-mobile">
                     <div class="box">
-                        <div class="card-header-toggle" onclick="toggleCard('conteudo-conta', 'btn-conta')">
-                            <h3 class="subtitle is-5 mb-0">Por Conta/Cartão</h3>
-                            <button class="button is-small is-light" id="btn-conta">−</button>
-                        </div>
-                        <div id="conteudo-conta" class="table-container mt-3">
+                        <h3 class="subtitle is-5">Por Conta/Cartão</h3>
+                        <div class="table-container">
                             <table class="table is-fullwidth is-narrow is-striped">
                                 <tbody>
                                     {% for conta, total in resumo_contas.items() %}
@@ -107,11 +89,8 @@
                 <div class="column is-4-desktop is-12-tablet">
                     
                     <div class="box">
-                        <div class="card-header-toggle" onclick="toggleCard('conteudo-form-transacao', 'btn-form-tx')">
-                            <h2 class="subtitle is-5 mb-0">Lançar Compra / Parcela 💸</h2>
-                            <button class="button is-small is-light" id="btn-form-tx">−</button>
-                        </div>
-                        <form id="conteudo-form-transacao" action="/nova-transacao" method="POST" class="mt-3">
+                        <h2 class="subtitle is-5">Lançar Compra / Parcela 💸</h2>
+                        <form action="/nova-transacao" method="POST">
                             <div class="field">
                                 <input class="input" type="text" name="descricao" placeholder="Ex: Mercado, Parcela Caixa" required>
                             </div>
@@ -150,11 +129,8 @@
                     </div>
 
                     <div class="box">
-                        <div class="card-header-toggle" onclick="toggleCard('conteudo-form-conta', 'btn-form-conta')">
-                            <h2 class="subtitle is-5 mb-0">Cadastrar Conta / Cartão 🏦</h2>
-                            <button class="button is-small is-light" id="btn-form-conta">−</button>
-                        </div>
-                        <form id="conteudo-form-conta" action="/nova-conta" method="POST" class="mt-3">
+                        <h2 class="subtitle is-5">Cadastrar Conta / Cartão 🏦</h2>
+                        <form action="/nova-conta" method="POST">
                             <div class="field">
                                 <input class="input" type="text" name="nome" placeholder="Ex: Nubank" required>
                             </div>
@@ -182,11 +158,9 @@
 
                 <div class="column is-8-desktop is-12-tablet">
                     <div class="box">
-                        <div class="card-header-toggle" onclick="toggleCard('conteudo-extrato', 'btn-extrato')">
-                            <h2 class="subtitle is-5 mb-0">Extrato Detalhado: {{ mes_filtro }}</h2>
-                            <button class="button is-small is-light" id="btn-extrato">−</button>
-                        </div>
-                        <div id="conteudo-extrato" class="table-container mt-3">
+                        <h2 class="subtitle is-5">Extrato Detalhado: {{ mes_filtro }}</h2>
+                        
+                        <div class="table-container">
                             <table class="table is-fullwidth is-striped is-hoverable">
                                 <thead>
                                     <tr>
@@ -202,7 +176,7 @@
                                         <td><strong>{{ tx.descricao }}</strong></td>
                                         <td><span class="tag is-light">{{ tx.categoria.value }}</span></td>
                                         <td><small>{{ tx.conta.nome }}</small></td>
-                                        <td class="has-text-danger has-text-right">R$&nbsp;{{ "%.2f"|format(tx.valor) }}</td>
+                                        <td class="has-text-danger has-text-right style-weight-bold">R$&nbsp;{{ "%.2f"|format(tx.valor) }}</td>
                                     </tr>
                                     {% else %}
                                     <tr>
@@ -212,6 +186,7 @@
                                 </tbody>
                             </table>
                         </div>
+                        
                     </div>
                 </div>
                 
@@ -219,57 +194,5 @@
 
         </div>
     </section>
-
-    <script>
-        // Função para alternar a visibilidade do card e salvar no LocalStorage
-        function toggleCard(contentId, buttonId) {
-            const conteudo = document.getElementById(contentId);
-            const botao = document.getElementById(buttonId);
-            
-            conteudo.classList.toggle('is-minimized');
-            
-            // Verifica se o card ficou minimizado após o clique
-            const estaMinimizado = conteudo.classList.contains('is-minimized');
-            
-            if (estaMinimizado) {
-                botao.textContent = '+';
-            } else {
-                botao.textContent = '-';
-            }
-            
-            // Salva o estado atual (true para minimizado, false para visível) no LocalStorage
-            localStorage.setItem(contentId, estaMinimizado);
-        }
-
-        // Função que roda automaticamente assim que a página termina de carregar
-        document.addEventListener("DOMContentLoaded", function() {
-            // Lista com os IDs de todos os conteúdos de cards que temos na tela
-            const cards = [
-                { contentId: 'conteudo-categoria', buttonId: 'btn-cat' },
-                { contentId: 'conteudo-conta', buttonId: 'btn-conta' },
-                { contentId: 'conteudo-form-transacao', buttonId: 'btn-form-tx' },
-                { contentId: 'conteudo-form-conta', buttonId: 'btn-form-conta' },
-                { contentId: 'conteudo-extrato', buttonId: 'btn-extrato' }
-            ];
-
-            cards.forEach(card => {
-                const conteudo = document.getElementById(card.contentId);
-                const botao = document.getElementById(card.buttonId);
-                
-                // Recupera o valor salvo no LocalStorage (retorna uma string "true" ou "false")
-                const estadoSalvo = localStorage.getItem(card.contentId);
-                
-                // Se estiver salvo como "true", aplica a minimização imediatamente
-                if (estadoSalvo === "true") {
-                    conteudo.classList.add('is-minimized');
-                    botao.textContent = '+';
-                } else {
-                    // Padrão ou se estiver "false", garante que comece aberto
-                    conteudo.classList.remove('is-minimized');
-                    botao.textContent = '-';
-                }
-            });
-        });
-    </script>
 </body>
 </html>
