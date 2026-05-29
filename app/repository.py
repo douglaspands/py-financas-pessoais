@@ -26,5 +26,10 @@ def listar_transacoes(ctx: Context, *, mes_filtro: str) -> list[Transacao]:
     )
 
 
+def criar_transacao(ctx: Context, *, transacao: Transacao) -> Transacao:
+    ctx.session.add(transacao)
+    return transacao
+
+
 def limpar_transacoes(ctx: Context) -> None:
     ctx.session.query(Transacao).delete()

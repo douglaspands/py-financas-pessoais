@@ -90,7 +90,7 @@ def cadastrar_transacao(
             categoria=categoria,
             conta_id=conta_id,
         )
-        ctx.session.add(nova_tx)
+        repository.criar_transacao(ctx, transacao=nova_tx)
 
     return fatura
 
@@ -139,7 +139,7 @@ def importar_transacoes_csv(ctx: Context, *, arquivo: Path) -> tuple[int, int]:
                 categoria = CategoriaTransacao(categoria_str)
 
                 # Busca a conta para aplicar a regra de fechamento de fatura
-                conta = ctx.session.get(Conta, conta_id)
+                conta = repository.obter_conta(ctx, pk=conta_id)
                 if not conta:
                     typer.secho(
                         f"⚠️ Linha {contagem_linhas}: Conta ID {conta_id} não encontrada. Pulando.",
@@ -173,7 +173,7 @@ def importar_transacoes_csv(ctx: Context, *, arquivo: Path) -> tuple[int, int]:
                         categoria=categoria,
                         conta_id=conta_id,
                     )
-                    ctx.session.add(nova_tx)
+                    repository.criar_transacao(ctx, transacao=nova_tx)
                     contagem_insercoes += 1
 
             except ValueError:
