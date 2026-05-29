@@ -1,7 +1,7 @@
 [project]
 name = "py-financas-pessoais"
 version = "0.1.0"
-description = "A personal finance management application built with FastAPI and SQLModel."
+description = "Sistema de Controle Financeiro Pessoal"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
