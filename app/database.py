@@ -1,19 +1,22 @@
 from contextlib import contextmanager
+from functools import cache
 
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, create_engine
 
-sqlite_file_name = "financeiro.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
-
-# O connect_args é necessário apenas para o SQLite permitir múltiplas threads
-engine = create_engine(sqlite_url, connect_args={"check_same_thread": False})
+from app.settings import get_settings
 
 
-def init_db():
-    SQLModel.metadata.create_all(engine)
+@cache
+def get_engine():
+    settings = get_settings()
+    return create_engine(
+        settings.db_url,
+        echo=settings.db_debug,
+        connect_args={"check_same_thread": False},
+    )
 
 
 @contextmanager
 def get_session():
-    with Session(engine) as session:
+    with Session(get_engine()) as session:
         yield session

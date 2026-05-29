@@ -2,11 +2,9 @@ import typer
 from fastapi import FastAPI
 
 from app import cli, controller
-from app.database import init_db
 
 
 async def lifespan(app: FastAPI):
-    init_db()
     yield
 
 
