@@ -4,36 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finanças Mobile</title>
+    <link rel="icon" type="image/png" href="./static/img/favicon.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
-    <style>
-        /* Garante espaçamento vertical idêntico quando os cards quebrarem linha */
-        .box {
-            margin-bottom: 1.5rem !important;
-        }
-        
-        /* Remove a margem do último elemento para não quebrar o alinhamento inferior */
-        .column > .box:last-child {
-            margin-bottom: 0 !important;
-        }
-
-        @media (max-width: 768px) {
-            .section { padding: 1.5rem 1rem; }
-            .box { padding: 1.25rem; }
-            .title.is-2 { font-size: 1.75rem; }
-        }
-        /* Estilo para deixar o cabeçalho do card com cara de clicável */
-        .card-header-toggle {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            user-select: none;
-        }
-        /* Classe utilitária para esconder o conteúdo quando minimizado */
-        .is-minimized {
-            display: none !important;
-        }
-    </style>
+    <link rel="stylesheet" href="./static/css/style.css">
 </head>
 <body class="has-background-light">
     <section class="section">
@@ -233,51 +206,6 @@
         </div>
     </section>
 
-    <script>
-        // Função para alternar a visibilidade do card e salvar no LocalStorage
-        function toggleCard(contentId, buttonId) {
-            const conteudo = document.getElementById(contentId);
-            const botao = document.getElementById(buttonId);
-            
-            conteudo.classList.toggle('is-minimized');
-            
-            // Verifica se o card ficou minimizado após o clique
-            const estaMinimizado = conteudo.classList.contains('is-minimized');
-            
-            if (estaMinimizado) {
-                botao.textContent = '+';
-            } else {
-                botao.textContent = '-';
-            }
-            
-            // Salva o estado atual (true para minimizado, false para visível) no LocalStorage
-            localStorage.setItem(contentId, estaMinimizado);
-        }
-
-        // Função que roda automaticamente assim que a página termina de carregar
-        document.addEventListener("DOMContentLoaded", function() {
-            const cards = [
-                { contentId: 'conteudo-categoria', buttonId: 'btn-cat' },
-                { contentId: 'conteudo-conta', buttonId: 'btn-conta' },
-                { contentId: 'conteudo-form-transacao', buttonId: 'btn-form-tx' },
-                { contentId: 'conteudo-form-conta', buttonId: 'btn-form-conta' },
-                { contentId: 'conteudo-extrato', buttonId: 'btn-extrato' }
-            ];
-
-            cards.forEach(card => {
-                const conteudo = document.getElementById(card.contentId);
-                const botao = document.getElementById(card.buttonId);
-                const estadoSalvo = localStorage.getItem(card.contentId);
-                
-                if (estadoSalvo === "true") {
-                    conteudo.classList.add('is-minimized');
-                    botao.textContent = '+';
-                } else {
-                    conteudo.classList.remove('is-minimized');
-                    botao.textContent = '-';
-                }
-            });
-        });
-    </script>
+    <script src="./static/js/script.js"></script>
 </body>
 </html>

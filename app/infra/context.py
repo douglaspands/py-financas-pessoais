@@ -6,8 +6,8 @@ from typing import Any, Generator, Self
 from fastapi import Request
 from sqlmodel import Session
 
-from app.database import get_session
-from app.template import Jinja2Templates, templates
+from app.infra.database import get_session
+from app.infra.template import Jinja2Templates, templates
 
 
 class Context:

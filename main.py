@@ -1,12 +1,12 @@
 if __name__ == "__main__":
-    from app.infra import create_cli
+    from app.infra.cli import create_app
 
-    app = create_cli()
+    app = create_app()
     app()
 
 else:
-    from app.infra import create_asgi
+    from app.infra.asgi import create_app
 
-    app = create_asgi()
+    app = create_app()
 
 __all__ = ["app"]

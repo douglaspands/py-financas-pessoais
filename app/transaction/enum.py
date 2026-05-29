@@ -1,14 +1,8 @@
 from enum import StrEnum
 
 
-class TipoConta(StrEnum):
-    DEBITO = "debito"
-    CREDITO = "credito"
-    FINANCIAMENTO = "financiamento"
-
-
 # Novas categorias para classificar os gastos
-class CategoriaTransacao(StrEnum):
+class CategoriaTransacaoEnum(StrEnum):
     MORADIA = "moradia"  # Para o financiamento, condomínio, luz
     ALIMENTACAO = "alimentacao"
     TRANSPORTE = "transporte"

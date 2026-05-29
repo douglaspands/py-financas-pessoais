@@ -3,7 +3,7 @@ from pathlib import Path
 import typer
 
 from app import service
-from app.context import get_context
+from app.infra.context import get_context
 
 app = typer.Typer(name="importar", help="subcomando para importar transações.")
 

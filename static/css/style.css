@@ -1,0 +1,37 @@
+/* Garante espaçamento vertical idêntico quando os cards quebrarem linha */
+.box {
+    margin-bottom: 1.5rem !important;
+}
+
+/* Remove a margem do último elemento para não quebrar o alinhamento inferior */
+.column>.box:last-child {
+    margin-bottom: 0 !important;
+}
+
+@media (max-width: 768px) {
+    .section {
+        padding: 1.5rem 1rem;
+    }
+
+    .box {
+        padding: 1.25rem;
+    }
+
+    .title.is-2 {
+        font-size: 1.75rem;
+    }
+}
+
+/* Estilo para deixar o cabeçalho do card com cara de clicável */
+.card-header-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Classe utilitária para esconder o conteúdo quando minimizado */
+.is-minimized {
+    display: none !important;
+}

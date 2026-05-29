@@ -3,7 +3,7 @@ from functools import cache
 
 from sqlmodel import Session, create_engine
 
-from app.settings import get_settings
+from app.infra.settings import get_settings
 
 
 @cache

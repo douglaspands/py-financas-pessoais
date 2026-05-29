@@ -1,21 +1,23 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Form
-from fastapi.responses import RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 
-from app import service
-from app.context import Context, get_context_from_request
-from app.model import CategoriaTransacao, TipoConta
+from app.account import service as account_service
+from app.account.enum import TipoContaEnum
+from app.infra.context import Context, get_context_from_request
+from app.transaction import service as transaction_service
+from app.transaction.enum import CategoriaTransacaoEnum
 
 router = APIRouter()
 
 
 @router.get("/")
-def read_root(
+def index(
     ctx: Context = Depends(get_context_from_request),
     mes_filtro: Optional[str] = None,
-):
-    transacoes = service.listar_transacoes(ctx, mes_filtro=mes_filtro)
+) -> HTMLResponse:
+    transacoes = transaction_service.listar_transacoes(ctx, mes_filtro=mes_filtro)
 
     return ctx.template.TemplateResponse(
         request=ctx.request,
@@ -32,13 +34,13 @@ def cadastrar_transacao(
     descricao: str = Form(...),
     valor: float = Form(...),
     conta_id: int = Form(...),
-    categoria: CategoriaTransacao = Form(...),  # Recebe a categoria do form
+    categoria: CategoriaTransacaoEnum = Form(...),  # Recebe a categoria do form
     parcelas: int = Form(1),
     ctx: Context = Depends(get_context_from_request),
-):
+) -> RedirectResponse:
     with ctx.session.begin():
         # fatura = service.cadastrar_transacao(
-        service.cadastrar_transacao(
+        transaction_service.cadastrar_transacao(
             ctx,
             descricao=descricao,
             valor=valor,
@@ -54,14 +56,14 @@ def cadastrar_transacao(
 @router.post("/nova-conta")
 def cadastrar_conta(
     nome: str = Form(...),
-    tipo: TipoConta = Form(...),
+    tipo: TipoContaEnum = Form(...),
     limite: float = Form(0.0),
     dia_fechamento: Optional[int] = Form(None),
     dia_vencimento: Optional[int] = Form(None),
     ctx: Context = Depends(get_context_from_request),
-):
+) -> RedirectResponse:
     with ctx.session.begin():
-        service.cadastrar_conta(
+        account_service.cadastrar_conta(
             ctx,
             nome=nome,
             tipo=tipo,

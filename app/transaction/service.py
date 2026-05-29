@@ -5,12 +5,12 @@ from typing import Optional
 
 import typer
 
-from app import repository
-from app.context import Context
-from app.enum import CategoriaTransacao
-
-# Importando os elementos do seu projeto atual
-from app.model import Conta, TipoConta, Transacao
+from app.account import service as account_service
+from app.account.enum import TipoContaEnum
+from app.infra.context import Context
+from app.transaction import repository
+from app.transaction.enum import CategoriaTransacaoEnum
+from app.transaction.model import Transacao
 
 
 def calcular_fatura(data_compra: date, dia_fechamento: int) -> str:
@@ -24,7 +24,7 @@ def calcular_fatura(data_compra: date, dia_fechamento: int) -> str:
 
 
 def listar_transacoes(ctx: Context, *, mes_filtro: Optional[str] = None) -> dict:
-    contas = repository.listar_contas(ctx)
+    contas = account_service.listar_contas(ctx)
     if not mes_filtro:
         mes_filtro = date.today().strftime("%Y-%m")
 
@@ -38,11 +38,9 @@ def listar_transacoes(ctx: Context, *, mes_filtro: Optional[str] = None) -> dict
     for tx in transacoes:
         total_mes += tx.valor
 
-        # Agrupando por Categoria
         cat_nome = tx.categoria.value.upper()
         resumo_categorias[cat_nome] = resumo_categorias.get(cat_nome, 0.0) + tx.valor
 
-        # Agrupando por Conta/Cartão
         conta_nome = tx.conta.nome
         resumo_contas[conta_nome] = resumo_contas.get(conta_nome, 0.0) + tx.valor
 
@@ -62,10 +60,10 @@ def cadastrar_transacao(
     descricao: str,
     valor: float,
     conta_id: int,
-    categoria: CategoriaTransacao,
+    categoria: CategoriaTransacaoEnum,
     parcelas: int,
 ) -> str:
-    conta = repository.obter_conta(ctx, pk=conta_id)
+    conta = account_service.obter_conta(ctx, pk=conta_id)
     if not conta:
         raise ValueError(f"Conta com ID {conta_id} não encontrada")
 
@@ -75,7 +73,7 @@ def cadastrar_transacao(
     for i in range(parcelas):
         data_parcela = data_atual + timedelta(days=30 * i)
 
-        if conta.tipo == TipoConta.CREDITO and conta.dia_fechamento:
+        if conta.tipo == TipoContaEnum.CREDITO and conta.dia_fechamento:
             fatura = calcular_fatura(data_parcela, conta.dia_fechamento)
         else:
             fatura = data_parcela.strftime("%Y-%m")
@@ -95,25 +93,6 @@ def cadastrar_transacao(
     return fatura
 
 
-def cadastrar_conta(
-    ctx: Context,
-    *,
-    nome: str,
-    tipo: TipoConta,
-    limite: float = 0.0,
-    dia_fechamento: Optional[int] = None,
-    dia_vencimento: Optional[int] = None,
-):
-    nova_conta = Conta(
-        nome=nome,
-        tipo=tipo,
-        limite_ou_total=limite,
-        dia_fechamento=dia_fechamento,
-        dia_vencimento=dia_vencimento,
-    )
-    repository.criar_conta(ctx, conta=nova_conta)
-
-
 def limpar_transacoes(ctx: Context):
     repository.limpar_transacoes(ctx)
 
@@ -128,18 +107,14 @@ def importar_transacoes_csv(ctx: Context, *, arquivo: Path) -> tuple[int, int]:
         for linha in leitor:
             contagem_linhas += 1
             try:
-                # Parse e validação dos dados do CSV
                 descricao = linha["descricao"]
                 valor_total = float(linha["valor"])
                 parcelas = int(linha.get("parcelas", 1))
                 categoria_str = linha.get("categoria", "outros").lower()
                 conta_id = int(linha["conta_id"])
 
-                # Valida a categoria com o Enum
-                categoria = CategoriaTransacao(categoria_str)
-
-                # Busca a conta para aplicar a regra de fechamento de fatura
-                conta = repository.obter_conta(ctx, pk=conta_id)
+                categoria = CategoriaTransacaoEnum(categoria_str)
+                conta = account_service.obter_conta(ctx, pk=conta_id)
                 if not conta:
                     typer.secho(
                         f"⚠️ Linha {contagem_linhas}: Conta ID {conta_id} não encontrada. Pulando.",
@@ -150,11 +125,10 @@ def importar_transacoes_csv(ctx: Context, *, arquivo: Path) -> tuple[int, int]:
                 data_atual = date.today()
                 valor_parcela = valor_total / parcelas
 
-                # Aplica a mesma lógica de parcelamento do seu main.py
                 for i in range(parcelas):
                     data_parcela = data_atual + timedelta(days=30 * i)
 
-                    if conta.tipo == TipoConta.CREDITO and conta.dia_fechamento:
+                    if conta.tipo == TipoContaEnum.CREDITO and conta.dia_fechamento:
                         fatura = calcular_fatura(data_parcela, conta.dia_fechamento)
                     else:
                         fatura = data_parcela.strftime("%Y-%m")
@@ -181,6 +155,5 @@ def importar_transacoes_csv(ctx: Context, *, arquivo: Path) -> tuple[int, int]:
                     f"⚠️ Linha {contagem_linhas}: Erro de conversão de valores. Verifique 'valor', 'parcelas' ou 'conta_id'. Pulando.",
                     fg=typer.colors.YELLOW,
                 )
-                continue
 
     return contagem_linhas, contagem_insercoes
