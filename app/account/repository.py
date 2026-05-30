@@ -18,9 +18,8 @@ async def obter_conta(ctx: Context, *, pk: int) -> Conta | None:
     return result.first()
 
 
-async def criar_conta(ctx: Context, *, conta: Conta) -> Conta:
+async def criar_conta(ctx: Context, *, conta: Conta) -> int:
     conta.created_at = conta.updated_at = datetime.now(timezone.utc)
     stmt = insert(Conta).values(**conta.model_dump(exclude={"id"}))
     result = await ctx.session.exec(stmt)
-    conta.id = result.lastrowid
-    return conta
+    return result.lastrowid

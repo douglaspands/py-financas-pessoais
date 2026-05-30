@@ -10,7 +10,10 @@ if TYPE_CHECKING:
 
 
 class Transacao(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int = Field(default=None, primary_key=True)
+    grupo_id: Optional[int] = Field(
+        default=None, index=True
+    )  # Para agrupar transações parceladas
 
     descricao: str
     valor: float

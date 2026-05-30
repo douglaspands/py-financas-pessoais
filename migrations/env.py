@@ -23,7 +23,7 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 model_path = Path("app")
-for model_file in model_path.glob("model.py"):
+for model_file in model_path.glob("**/*.py"):
     if "__pycache__" in model_file.parts:
         continue
     module_path = str(model_file).replace(model_file.suffix, "").replace(os.sep, ".")

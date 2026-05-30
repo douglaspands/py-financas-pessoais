@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from app.index import controller as index_controller
+from app.financial_dash.controller import router as financial_dash_router
 
 
 async def lifespan(app: FastAPI):
@@ -11,5 +11,5 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     app = FastAPI(lifespan=lifespan)
     app.mount("/static", StaticFiles(directory="static"), name="static")
-    app.include_router(index_controller.router)
+    app.include_router(financial_dash_router)
     return app

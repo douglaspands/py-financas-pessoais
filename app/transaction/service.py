@@ -1,7 +1,6 @@
 import csv
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Optional
 
 import typer
 
@@ -32,10 +31,8 @@ def proxima_data(data: date, dia: int) -> date:
     return nova_data
 
 
-async def listar_transacoes(ctx: Context, *, mes_filtro: Optional[str] = None) -> dict:
+async def listar_transacoes(ctx: Context, *, mes_filtro: str) -> dict:
     contas = await account_service.listar_contas(ctx)
-    if not mes_filtro:
-        mes_filtro = date.today().strftime("%Y-%m")
 
     transacoes = await repository.listar_transacoes(ctx, mes_filtro=mes_filtro)
 
@@ -83,6 +80,7 @@ async def cadastrar_transacao(
     valor_parcela = valor / parcelas
 
     data_parcela = data_atual
+    grupo_id: int | None = None
     for i in range(parcelas):
         data_parcela = data_parcela if i == 0 else proxima_data(data_parcela, dia)
 
@@ -100,10 +98,22 @@ async def cadastrar_transacao(
             fatura_mes=fatura,
             categoria=categoria,
             conta_id=conta_id,
+            grupo_id=grupo_id,
         )
-        await repository.criar_transacao(ctx, transacao=nova_tx)
-
+        nova_tx.id = await repository.criar_transacao(ctx, transacao=nova_tx)
+        if not grupo_id:
+            grupo_id = nova_tx.id
     return fatura
+
+
+async def excluir_transacao(ctx: Context, *, transacao_id: int):
+    transacao = await repository.obter_transacao(ctx, pk=transacao_id)
+    if not transacao:
+        raise ValueError(f"Transação com ID {transacao_id} não encontrada")
+    await repository.excluir_transacao(ctx, pk=transacao.id)
+    await repository.excluir_grupo_transacoes(
+        ctx, grupo_id=transacao.grupo_id or transacao.id
+    )
 
 
 async def limpar_transacoes(ctx: Context):
@@ -146,6 +156,7 @@ async def importar_transacoes_csv(ctx: Context, *, arquivo: Path) -> tuple[int, 
                 valor_parcela = valor_total / parcelas
 
                 data_parcela = data_atual
+                grupo_id: int | None = None
                 for i in range(parcelas):
                     data_parcela = (
                         data_parcela if i == 0 else proxima_data(data_parcela, dia)
@@ -169,9 +180,14 @@ async def importar_transacoes_csv(ctx: Context, *, arquivo: Path) -> tuple[int, 
                         fatura_mes=fatura,
                         categoria=categoria,
                         conta_id=conta_id,
+                        grupo_id=grupo_id,
                     )
-                    await repository.criar_transacao(ctx, transacao=nova_tx)
+                    nova_tx.id = await repository.criar_transacao(
+                        ctx, transacao=nova_tx
+                    )
                     contagem_insercoes += 1
+                    if not grupo_id:
+                        grupo_id = nova_tx.id
 
             except ValueError:
                 typer.secho(
