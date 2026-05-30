@@ -36,7 +36,7 @@ target_metadata = SQLModel.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 settings = get_settings()
-config.set_main_option("sqlalchemy.url", settings.db_url)
+config.set_main_option("sqlalchemy.url", settings.db_url())
 extra_config = {"version_table": "migration_version"}
 
 

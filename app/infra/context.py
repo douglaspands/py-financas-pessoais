@@ -1,23 +1,22 @@
 from __future__ import annotations
 
-from contextlib import contextmanager
-from typing import Any, Generator, Self
+from contextlib import asynccontextmanager
+from typing import Any, AsyncGenerator, Self
 
 from fastapi import Request
-from sqlmodel import Session
 
-from app.infra.database import get_session
+from app.infra.database import AsyncSession, get_session
 from app.infra.template import Jinja2Templates, templates
 
 
 class Context:
-    _session: Session | None = None
+    _session: AsyncSession | None = None
     _request: Request | None = None
     _template: Jinja2Templates | None = None
 
     def __init__(
         self: Self,
-        session: Session | None = None,
+        session: AsyncSession | None = None,
         request: Request | None = None,
         template: Jinja2Templates | None = None,
     ):
@@ -26,7 +25,7 @@ class Context:
         self._template = template
 
     @property
-    def session(self: Self) -> Session:
+    def session(self: Self) -> AsyncSession:
         if not self._session:
             raise ValueError("session not found")
         return self._session
@@ -44,19 +43,19 @@ class Context:
         return self._template
 
 
-@contextmanager
-def get_context(
+@asynccontextmanager
+async def get_context(
     request: Request | None = None,
     template: Jinja2Templates | None = None,
-) -> Generator[Context, Any, None]:
-    with get_session() as session:
+) -> AsyncGenerator[Context, Any]:
+    async with get_session() as session:
         yield Context(session=session, request=request, template=template)
 
 
-def get_context_from_request(
+async def get_context_from_request(
     request: Request,
-) -> Generator[Context, Any, None]:
-    with get_context(request=request, template=templates) as context:
+) -> AsyncGenerator[Context, Any]:
+    async with get_context(request=request, template=templates) as context:
         yield context
 
 

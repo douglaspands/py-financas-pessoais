@@ -23,12 +23,12 @@ def calcular_fatura(data_compra: date, dia_fechamento: int) -> str:
         return f"{ano}-{mes:02d}"
 
 
-def listar_transacoes(ctx: Context, *, mes_filtro: Optional[str] = None) -> dict:
-    contas = account_service.listar_contas(ctx)
+async def listar_transacoes(ctx: Context, *, mes_filtro: Optional[str] = None) -> dict:
+    contas = await account_service.listar_contas(ctx)
     if not mes_filtro:
         mes_filtro = date.today().strftime("%Y-%m")
 
-    transacoes = repository.listar_transacoes(ctx, mes_filtro=mes_filtro)
+    transacoes = await repository.listar_transacoes(ctx, mes_filtro=mes_filtro)
 
     # --- LÓGICA DO RELATÓRIO DO MÊS ---
     total_mes = 0.0
@@ -54,7 +54,7 @@ def listar_transacoes(ctx: Context, *, mes_filtro: Optional[str] = None) -> dict
     }
 
 
-def cadastrar_transacao(
+async def cadastrar_transacao(
     ctx: Context,
     *,
     descricao: str,
@@ -63,7 +63,7 @@ def cadastrar_transacao(
     categoria: CategoriaTransacaoEnum,
     parcelas: int,
 ) -> str:
-    conta = account_service.obter_conta(ctx, pk=conta_id)
+    conta = await account_service.obter_conta(ctx, pk=conta_id)
     if not conta:
         raise ValueError(f"Conta com ID {conta_id} não encontrada")
 
@@ -88,16 +88,16 @@ def cadastrar_transacao(
             categoria=categoria,
             conta_id=conta_id,
         )
-        repository.criar_transacao(ctx, transacao=nova_tx)
+        await repository.criar_transacao(ctx, transacao=nova_tx)
 
     return fatura
 
 
-def limpar_transacoes(ctx: Context):
-    repository.limpar_transacoes(ctx)
+async def limpar_transacoes(ctx: Context):
+    await repository.limpar_transacoes(ctx)
 
 
-def importar_transacoes_csv(ctx: Context, *, arquivo: Path) -> tuple[int, int]:
+async def importar_transacoes_csv(ctx: Context, *, arquivo: Path) -> tuple[int, int]:
     contagem_linhas = 0
     contagem_insercoes = 0
 
@@ -114,7 +114,7 @@ def importar_transacoes_csv(ctx: Context, *, arquivo: Path) -> tuple[int, int]:
                 conta_id = int(linha["conta_id"])
 
                 categoria = CategoriaTransacaoEnum(categoria_str)
-                conta = account_service.obter_conta(ctx, pk=conta_id)
+                conta = await account_service.obter_conta(ctx, pk=conta_id)
                 if not conta:
                     typer.secho(
                         f"⚠️ Linha {contagem_linhas}: Conta ID {conta_id} não encontrada. Pulando.",
@@ -147,7 +147,7 @@ def importar_transacoes_csv(ctx: Context, *, arquivo: Path) -> tuple[int, int]:
                         categoria=categoria,
                         conta_id=conta_id,
                     )
-                    repository.criar_transacao(ctx, transacao=nova_tx)
+                    await repository.criar_transacao(ctx, transacao=nova_tx)
                     contagem_insercoes += 1
 
             except ValueError:

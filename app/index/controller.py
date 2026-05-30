@@ -13,11 +13,11 @@ router = APIRouter()
 
 
 @router.get("/")
-def index(
+async def index(
     ctx: Context = Depends(get_context_from_request),
     mes_filtro: Optional[str] = None,
 ) -> HTMLResponse:
-    transacoes = transaction_service.listar_transacoes(ctx, mes_filtro=mes_filtro)
+    transacoes = await transaction_service.listar_transacoes(ctx, mes_filtro=mes_filtro)
 
     return ctx.template.TemplateResponse(
         request=ctx.request,
@@ -30,7 +30,7 @@ def index(
 
 
 @router.post("/nova-transacao")
-def cadastrar_transacao(
+async def cadastrar_transacao(
     descricao: str = Form(...),
     valor: float = Form(...),
     conta_id: int = Form(...),
@@ -38,9 +38,9 @@ def cadastrar_transacao(
     parcelas: int = Form(1),
     ctx: Context = Depends(get_context_from_request),
 ) -> RedirectResponse:
-    with ctx.session.begin():
+    async with ctx.session.begin():
         # fatura = service.cadastrar_transacao(
-        transaction_service.cadastrar_transacao(
+        await transaction_service.cadastrar_transacao(
             ctx,
             descricao=descricao,
             valor=valor,
@@ -54,7 +54,7 @@ def cadastrar_transacao(
 
 # Rota simples para cadastrar contas (mantida igual)
 @router.post("/nova-conta")
-def cadastrar_conta(
+async def cadastrar_conta(
     nome: str = Form(...),
     tipo: TipoContaEnum = Form(...),
     limite: float = Form(0.0),
@@ -62,8 +62,8 @@ def cadastrar_conta(
     dia_vencimento: Optional[int] = Form(None),
     ctx: Context = Depends(get_context_from_request),
 ) -> RedirectResponse:
-    with ctx.session.begin():
-        account_service.cadastrar_conta(
+    async with ctx.session.begin():
+        await account_service.cadastrar_conta(
             ctx,
             nome=nome,
             tipo=tipo,

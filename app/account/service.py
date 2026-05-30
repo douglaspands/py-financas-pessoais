@@ -6,7 +6,7 @@ from app.account.model import Conta
 from app.infra.context import Context
 
 
-def cadastrar_conta(
+async def cadastrar_conta(
     ctx: Context,
     *,
     nome: str,
@@ -22,12 +22,12 @@ def cadastrar_conta(
         dia_fechamento=dia_fechamento,
         dia_vencimento=dia_vencimento,
     )
-    repository.criar_conta(ctx, conta=nova_conta)
+    await repository.criar_conta(ctx, conta=nova_conta)
 
 
-def listar_contas(ctx: Context) -> list[Conta]:
-    return repository.listar_contas(ctx)
+async def listar_contas(ctx: Context) -> list[Conta]:
+    return await repository.listar_contas(ctx)
 
 
-def obter_conta(ctx: Context, *, pk: int) -> Conta | None:
-    return repository.obter_conta(ctx, pk=pk)
+async def obter_conta(ctx: Context, *, pk: int) -> Conta | None:
+    return await repository.obter_conta(ctx, pk=pk)
