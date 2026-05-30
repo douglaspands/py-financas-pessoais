@@ -178,7 +178,7 @@
                             <table class="table is-fullwidth is-striped is-hoverable">
                                 <thead>
                                     <tr>
-                                        <th>Dia</th>
+                                        <th>Data</th>
                                         <th>Descrição</th>
                                         <th>Categoria</th>
                                         <th>Origem</th>
@@ -189,7 +189,7 @@
                                 <tbody>
                                     {% for tx in transacoes %}
                                     <tr>
-                                        <td><small>{{ tx.data.day }}</small></td>
+                                        <td><small>{{ tx.data }}</small></td>
                                         <td><strong>{{ tx.descricao }}</strong></td>
                                         <td><span class="tag is-light">{{ tx.categoria.value }}</span></td>
                                         <td><small>{{ tx.conta.nome }}</small></td>
