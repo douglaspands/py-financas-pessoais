@@ -33,26 +33,19 @@ def proxima_data(data: date, dia: int) -> date:
 
 async def listar_transacoes(ctx: Context, *, mes_filtro: str) -> dict:
     contas = await account_service.listar_contas(ctx)
-
     transacoes = await repository.listar_transacoes(ctx, mes_filtro=mes_filtro)
-
-    # --- LÓGICA DO RELATÓRIO DO MÊS ---
     total_mes = 0.0
     resumo_categorias = {}
     resumo_contas = {}
-
     for tx in transacoes:
         total_mes += tx.valor
-
         cat_nome = tx.categoria.value.upper()
         resumo_categorias[cat_nome] = resumo_categorias.get(cat_nome, 0.0) + tx.valor
-
         conta_nome = tx.conta.nome
         resumo_contas[conta_nome] = resumo_contas.get(conta_nome, 0.0) + tx.valor
-
     return {
         "contas": contas,
-        "transacoes": transacoes,
+        "transacoes": sorted(transacoes, key=lambda tx: tx.data, reverse=True),
         "mes_filtro": mes_filtro,
         "total_mes": total_mes,
         "resumo_categorias": dict(
@@ -70,16 +63,17 @@ async def cadastrar_transacao(
     conta_id: int,
     categoria: CategoriaTransacaoEnum,
     parcelas: int,
+    data: date | None = None,
 ) -> str:
     conta = await account_service.obter_conta(ctx, pk=conta_id)
     if not conta:
         raise ValueError(f"Conta com ID {conta_id} não encontrada")
 
-    data_atual = date.today()
-    dia = data_atual.day
+    data = data or date.today()
+    dia = data.day
     valor_parcela = valor / parcelas
 
-    data_parcela = data_atual
+    data_parcela = data
     grupo_id: int | None = None
     for i in range(parcelas):
         data_parcela = data_parcela if i == 0 else proxima_data(data_parcela, dia)
@@ -94,7 +88,7 @@ async def cadastrar_transacao(
         nova_tx = Transacao(
             descricao=desc_final,
             valor=valor_parcela,
-            data=data_atual,
+            data=data,
             fatura_mes=fatura,
             categoria=categoria,
             conta_id=conta_id,
@@ -132,62 +126,27 @@ async def importar_transacoes_csv(ctx: Context, *, arquivo: Path) -> tuple[int, 
             try:
                 descricao = linha["descricao"]
                 valor_total = float(str(linha["valor"]).replace(",", "."))
-                parcelas = int(linha.get("parcelas", 1))
+                conta_id = int(linha["conta_id"])
                 categoria_str = utils.remover_acentos(
                     linha.get("categoria", "outros").lower()
                 )
-                conta_id = int(linha["conta_id"])
-
                 categoria = CategoriaTransacaoEnum(categoria_str)
-                conta = await account_service.obter_conta(ctx, pk=conta_id)
-                if not conta:
-                    typer.secho(
-                        f"⚠️ Linha {contagem_linhas}: Conta ID {conta_id} não encontrada. Pulando.",
-                        fg=typer.colors.YELLOW,
-                    )
-                    continue
-
-                data_atual = (
+                parcelas = int(linha.get("parcelas", 1))
+                data: date = (
                     datetime.strptime(linha["data"], r"%Y-%m-%d").date()
                     if linha.get("data")
                     else date.today()
                 )
-                dia = data_atual.day
-                valor_parcela = valor_total / parcelas
-
-                data_parcela = data_atual
-                grupo_id: int | None = None
-                for i in range(parcelas):
-                    data_parcela = (
-                        data_parcela if i == 0 else proxima_data(data_parcela, dia)
-                    )
-
-                    if conta.tipo == TipoContaEnum.CREDITO and conta.dia_fechamento:
-                        fatura = calcular_fatura(data_parcela, conta.dia_fechamento)
-                    else:
-                        fatura = data_parcela.strftime("%Y-%m")
-
-                    desc_final = (
-                        f"{descricao} ({i + 1}/{parcelas})"
-                        if parcelas > 1
-                        else descricao
-                    )
-
-                    nova_tx = Transacao(
-                        descricao=desc_final,
-                        valor=valor_parcela,
-                        data=data_atual,
-                        fatura_mes=fatura,
-                        categoria=categoria,
-                        conta_id=conta_id,
-                        grupo_id=grupo_id,
-                    )
-                    nova_tx.id = await repository.criar_transacao(
-                        ctx, transacao=nova_tx
-                    )
-                    contagem_insercoes += 1
-                    if not grupo_id:
-                        grupo_id = nova_tx.id
+                await cadastrar_transacao(
+                    ctx,
+                    descricao=descricao,
+                    valor=valor_total,
+                    conta_id=conta_id,
+                    categoria=categoria,
+                    parcelas=parcelas,
+                    data=data,
+                )
+                contagem_insercoes += parcelas
 
             except ValueError:
                 typer.secho(

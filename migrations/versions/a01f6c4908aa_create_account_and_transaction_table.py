@@ -28,7 +28,7 @@ def upgrade() -> None:
         sa.Column("nome", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column(
             "tipo",
-            sa.Enum("DEBITO", "CREDITO", "FINANCIAMENTO", name="tipocontaenum"),
+            sa.Enum("DEBITO", "CREDITO", name="tipocontaenum"),
             nullable=False,
         ),
         sa.Column("limite_ou_total", sa.Float(), nullable=True),

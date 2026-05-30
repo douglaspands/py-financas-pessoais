@@ -7,10 +7,10 @@ import typer
 from app.infra.context import get_context
 from app.transaction import service
 
-app = typer.Typer(name="importar", help="subcomando para importar transações.")
+app = typer.Typer(name="transacao", help="Comandos relacionados a transações.")
 
 
-@app.command("csv")
+@app.command("importar-csv")
 def importar_csv(
     arquivo: Path = typer.Argument(
         ..., help="Caminho para o arquivo CSV de transações."
