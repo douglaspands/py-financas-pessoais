@@ -5,4 +5,4 @@ from app.transaction.enum import CategoriaTransacaoEnum
 
 templates = Jinja2Templates(directory="templates")
 templates.env.filters["formatar_moeda"] = utils.formatar_moeda
-templates.env.globals["categorias_disponiveis"] = CategoriaTransacaoEnum
+templates.env.globals["categorias_disponiveis"] = CategoriaTransacaoEnum  # type: ignore
