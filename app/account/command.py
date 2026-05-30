@@ -36,7 +36,7 @@ def criar_conta(
     async def main():
         async with get_context() as ctx:
             async with ctx.session.begin():
-                await service.cadastrar_conta(
+                conta_id = await service.cadastrar_conta(
                     ctx,
                     nome=nome,
                     tipo=tipo,
@@ -45,10 +45,11 @@ def criar_conta(
                     dia_vencimento=dia_vencimento,
                 )
                 typer.echo(f"Criando a conta: {nome}...")
+        return conta_id
 
     try:
         start_time = time.perf_counter()
-        asyncio.run(main())
+        conta_id = asyncio.run(main())
         end_time = time.perf_counter()
         typer.secho(
             f"⏱️ Tempo de execução: {end_time - start_time:.2f} segundos",
@@ -64,7 +65,7 @@ def criar_conta(
         raise typer.Exit(code=1)
 
     typer.secho(
-        f"\n🚀 Sucesso! Conta '{nome}' criada com sucesso.",
+        f"\n🚀 Sucesso! Conta '{nome}' ({conta_id}) criada com sucesso.",
         fg=typer.colors.GREEN,
         bold=True,
     )

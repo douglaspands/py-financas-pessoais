@@ -14,7 +14,7 @@ async def cadastrar_conta(
     limite: float = 0.0,
     dia_fechamento: Optional[int] = None,
     dia_vencimento: Optional[int] = None,
-):
+) -> int:
     nova_conta = Conta(
         nome=nome,
         tipo=tipo,
@@ -22,7 +22,7 @@ async def cadastrar_conta(
         dia_fechamento=dia_fechamento,
         dia_vencimento=dia_vencimento,
     )
-    await repository.criar_conta(ctx, conta=nova_conta)
+    return await repository.criar_conta(ctx, conta=nova_conta)
 
 
 async def listar_contas(ctx: Context) -> list[Conta]:
