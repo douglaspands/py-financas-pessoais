@@ -39,7 +39,6 @@ async def cadastrar_transacao(
     ctx: Context = Depends(get_context_from_request),
 ) -> RedirectResponse:
     async with ctx.session.begin():
-        # fatura = service.cadastrar_transacao(
         await transaction_service.cadastrar_transacao(
             ctx,
             descricao=descricao,
@@ -48,11 +47,9 @@ async def cadastrar_transacao(
             categoria=categoria,
             parcelas=parcelas,
         )
-    # return RedirectResponse(url=f"/?mes_filtro={fatura}", status_code=303)
     return RedirectResponse(url="/", status_code=303)
 
 
-# Rota simples para cadastrar contas (mantida igual)
 @router.post("/nova-conta")
 async def cadastrar_conta(
     nome: str = Form(...),

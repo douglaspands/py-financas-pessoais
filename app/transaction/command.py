@@ -1,9 +1,11 @@
+import asyncio
+import time
 from pathlib import Path
 
 import typer
 
-from app import service
 from app.infra.context import get_context
+from app.transaction import service
 
 app = typer.Typer(name="importar", help="subcomando para importar transações.")
 
@@ -20,9 +22,22 @@ def importar_csv(
         help="Apaga todas as transações existentes antes da carga.",
     ),
 ):
-    """
-    Carrega transações em lote a partir de um arquivo CSV.
-    """
+    async def main():
+        async with get_context() as ctx:
+            if limpar_banco:
+                async with ctx.session.begin():
+                    typer.echo("Limpando transações antigas...")
+                    await service.limpar_transacoes(ctx)
+                    typer.echo(f"Processando o arquivo: {arquivo.name}...")
+
+            async with ctx.session.begin():
+                (
+                    contagem_linhas,
+                    contagem_insercoes,
+                ) = await service.importar_transacoes_csv(ctx, arquivo=arquivo)
+
+            return contagem_linhas, contagem_insercoes
+
     if not arquivo.exists():
         typer.secho(
             f"Erro: O arquivo '{arquivo}' não foi encontrado.",
@@ -31,32 +46,29 @@ def importar_csv(
         )
         raise typer.Exit(code=1)
 
-    with get_context() as ctx:
-        # Opção para resetar a tabela de transações, se desejado
-        if limpar_banco:
-            with ctx.session.begin():
-                typer.echo("Limpando transações antigas...")
-                service.limpar_transacoes(ctx)
-                typer.echo(f"Processando o arquivo: {arquivo.name}...")
-        try:
-            with ctx.session.begin():
-                contagem_linhas, contagem_insercoes = service.importar_transacoes_csv(
-                    ctx, arquivo=arquivo
-                )
-
-        except KeyError as e:
-            typer.secho(
-                f"❌ Erro de formatação na linha {contagem_linhas}: Coluna {e} ausente.",
-                fg=typer.colors.RED,
-            )
-            raise typer.Exit(code=1)
-
+    try:
+        start_time = time.perf_counter()
+        contagem_linhas, contagem_insercoes = asyncio.run(main())
+        end_time = time.perf_counter()
         typer.secho(
-            f"\n🚀 Sucesso! Processadas {contagem_linhas} linhas do CSV.",
-            fg=typer.colors.GREEN,
+            f"⏱️ Tempo de execução: {end_time - start_time:.2f} segundos",
+            fg=typer.colors.MAGENTA,
+        )
+
+    except Exception as e:
+        typer.secho(
+            f"❌ Ocorreu um erro durante a importação: {e}",
+            fg=typer.colors.RED,
             bold=True,
         )
-        typer.secho(
-            f"📦 {contagem_insercoes} registros de parcelas gerados no banco de dados.",
-            fg=typer.colors.CYAN,
-        )
+        raise typer.Exit(code=1)
+
+    typer.secho(
+        f"\n🚀 Sucesso! Processadas {contagem_linhas} linhas do CSV.",
+        fg=typer.colors.GREEN,
+        bold=True,
+    )
+    typer.secho(
+        f"📦 {contagem_insercoes} registros de parcelas gerados no banco de dados.",
+        fg=typer.colors.CYAN,
+    )

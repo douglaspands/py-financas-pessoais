@@ -1,5 +1,5 @@
 import csv
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -122,7 +122,11 @@ async def importar_transacoes_csv(ctx: Context, *, arquivo: Path) -> tuple[int, 
                     )
                     continue
 
-                data_atual = date.today()
+                data_atual = (
+                    datetime.strptime(linha["data"], "%Y-%m-%d").date()
+                    if linha.get("data")
+                    else date.today()
+                )
                 valor_parcela = valor_total / parcelas
 
                 for i in range(parcelas):
