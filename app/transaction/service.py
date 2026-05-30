@@ -24,6 +24,14 @@ def calcular_fatura(data_compra: date, dia_fechamento: int) -> str:
         return f"{ano}-{mes:02d}"
 
 
+def proxima_data(data: date, dia: int) -> date:
+    try:
+        nova_data = data.replace(month=data.month + 1, day=dia)
+    except BaseException:
+        nova_data = (data.replace(month=data.month + 2, day=1)) - timedelta(days=1)
+    return nova_data
+
+
 async def listar_transacoes(ctx: Context, *, mes_filtro: Optional[str] = None) -> dict:
     contas = await account_service.listar_contas(ctx)
     if not mes_filtro:
@@ -50,7 +58,9 @@ async def listar_transacoes(ctx: Context, *, mes_filtro: Optional[str] = None) -
         "transacoes": transacoes,
         "mes_filtro": mes_filtro,
         "total_mes": total_mes,
-        "resumo_categorias": resumo_categorias,
+        "resumo_categorias": dict(
+            sorted(resumo_categorias.items(), key=lambda item: item[1], reverse=True)
+        ),
         "resumo_contas": resumo_contas,
     }
 
@@ -69,10 +79,12 @@ async def cadastrar_transacao(
         raise ValueError(f"Conta com ID {conta_id} não encontrada")
 
     data_atual = date.today()
+    dia = data_atual.day
     valor_parcela = valor / parcelas
 
+    data_parcela = data_atual
     for i in range(parcelas):
-        data_parcela = data_atual + timedelta(days=30 * i)
+        data_parcela = data_parcela if i == 0 else proxima_data(data_parcela, dia)
 
         if conta.tipo == TipoContaEnum.CREDITO and conta.dia_fechamento:
             fatura = calcular_fatura(data_parcela, conta.dia_fechamento)
@@ -126,14 +138,18 @@ async def importar_transacoes_csv(ctx: Context, *, arquivo: Path) -> tuple[int, 
                     continue
 
                 data_atual = (
-                    datetime.strptime(linha["data"], "%Y-%m-%d").date()
+                    datetime.strptime(linha["data"], r"%Y-%m-%d").date()
                     if linha.get("data")
                     else date.today()
                 )
+                dia = data_atual.day
                 valor_parcela = valor_total / parcelas
 
+                data_parcela = data_atual
                 for i in range(parcelas):
-                    data_parcela = data_atual + timedelta(days=30 * i)
+                    data_parcela = (
+                        data_parcela if i == 0 else proxima_data(data_parcela, dia)
+                    )
 
                     if conta.tipo == TipoContaEnum.CREDITO and conta.dia_fechamento:
                         fatura = calcular_fatura(data_parcela, conta.dia_fechamento)
