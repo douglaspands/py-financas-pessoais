@@ -3,7 +3,7 @@ from enum import StrEnum
 
 # Novas categorias para classificar os gastos
 class CategoriaTransacaoEnum(StrEnum):
-    MORADIA = "moradia"  # Para o financiamento, condomínio, luz
+    MORADIA = "moradia"
     ALIMENTACAO = "alimentacao"
     TRANSPORTE = "transporte"
     LAZER = "lazer"
@@ -15,4 +15,18 @@ class CategoriaTransacaoEnum(StrEnum):
     TECNOLOGIA = "tecnologia"
     PROFISSIONAL = "profissional"
     VEICULO = "veiculo"
+    SERVICO = "servico"
+    SERVICO_ONLINE = "servico_online"
+    PET = "pet"
+    FERIAS = "ferias"
+    VIAGEM = "viagem"
+    FAMILIA = "familia"
+    ELETRONICO = "eletronico"
+    MERCADO = "mercado"
+    CAFE = "cafe"
+    DELIVERY = "delivery"
+    PRESENTE = "presente"
+    REFEICAO_TRABALHO = "refeicao_trabalho"
+    TAG_VEICULO = "tag_veiculo"
+    TRABALHO = "trabalho"
     OUTROS = "outros"

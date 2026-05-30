@@ -8,7 +8,7 @@ class Settings(BaseSettings):
 
     db_type: str = "sqlite"
     db_host: str = "database/financeiro.db"
-    db_debug: bool = True
+    db_debug: bool = False
 
     def db_url(self, is_async: bool = False) -> str:
         conn = f"{self.db_type}{'+aiosqlite' if is_async else ''}:///"

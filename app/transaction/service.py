@@ -8,13 +8,14 @@ import typer
 from app.account import service as account_service
 from app.account.enum import TipoContaEnum
 from app.infra.context import Context
+from app.infra.utils import remover_acentos
 from app.transaction import repository
 from app.transaction.enum import CategoriaTransacaoEnum
 from app.transaction.model import Transacao
 
 
 def calcular_fatura(data_compra: date, dia_fechamento: int) -> str:
-    if data_compra.day <= dia_fechamento:
+    if data_compra.day < dia_fechamento:
         return data_compra.strftime("%Y-%m")
     else:
         ano, mes = data_compra.year, data_compra.month + 1
@@ -108,9 +109,11 @@ async def importar_transacoes_csv(ctx: Context, *, arquivo: Path) -> tuple[int, 
             contagem_linhas += 1
             try:
                 descricao = linha["descricao"]
-                valor_total = float(linha["valor"])
+                valor_total = float(str(linha["valor"]).replace(",", "."))
                 parcelas = int(linha.get("parcelas", 1))
-                categoria_str = linha.get("categoria", "outros").lower()
+                categoria_str = remover_acentos(
+                    linha.get("categoria", "outros").lower()
+                )
                 conta_id = int(linha["conta_id"])
 
                 categoria = CategoriaTransacaoEnum(categoria_str)
