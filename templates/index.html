@@ -30,7 +30,7 @@
                     </div>
                     <div class="column is-12-mobile has-text-right-tablet has-text-centered-mobile mt-2-mobile">
                         <h2 class="subtitle is-6 mb-1">Total no Mês:</h2>
-                        <span class="title is-2 has-text-danger">R$ {{ "%.2f"|format(total_mes) }}</span>
+                        <span class="title is-2 has-text-danger">{{ total_mes|formatar_moeda }}</span>
                     </div>
                 </div>
             </div>
@@ -48,7 +48,7 @@
                                     {% for cat, total in resumo_categorias.items() %}
                                     <tr>
                                         <td><span class="tag is-info is-light">{{ cat }}</span></td>
-                                        <td class="has-text-right"><strong>R$ {{ "%.2f"|format(total) }}</strong></td>
+                                        <td class="has-text-right"><strong>{{ total|formatar_moeda }}</strong></td>
                                     </tr>
                                     {% else %}
                                     <tr><td colspan="2" class="has-text-grey">Nenhum dado</td></tr>
@@ -71,7 +71,7 @@
                                     {% for conta, total in resumo_contas.items() %}
                                     <tr>
                                         <td><strong>{{ conta }}</strong></td>
-                                        <td class="has-text-right has-text-danger">R$ {{ "%.2f"|format(total) }}</td>
+                                        <td class="has-text-right has-text-danger"><strong>{{ total|formatar_moeda }}</strong></td>
                                     </tr>
                                     {% else %}
                                     <tr><td colspan="2" class="has-text-grey">Nenhum dado</td></tr>
@@ -188,7 +188,7 @@
                                         <td><strong>{{ tx.descricao }}</strong></td>
                                         <td><span class="tag is-light">{{ tx.categoria.value }}</span></td>
                                         <td><small>{{ tx.conta.nome }}</small></td>
-                                        <td class="has-text-danger has-text-right">R$&nbsp;{{ "%.2f"|format(tx.valor) }}</td>
+                                        <td class="has-text-danger has-text-right">{{ tx.valor|formatar_moeda }}</td>
                                     </tr>
                                     {% else %}
                                     <tr>

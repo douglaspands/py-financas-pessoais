@@ -7,8 +7,8 @@ import typer
 
 from app.account import service as account_service
 from app.account.enum import TipoContaEnum
+from app.infra import utils
 from app.infra.context import Context
-from app.infra.utils import remover_acentos
 from app.transaction import repository
 from app.transaction.enum import CategoriaTransacaoEnum
 from app.transaction.model import Transacao
@@ -123,7 +123,7 @@ async def importar_transacoes_csv(ctx: Context, *, arquivo: Path) -> tuple[int, 
                 descricao = linha["descricao"]
                 valor_total = float(str(linha["valor"]).replace(",", "."))
                 parcelas = int(linha.get("parcelas", 1))
-                categoria_str = remover_acentos(
+                categoria_str = utils.remover_acentos(
                     linha.get("categoria", "outros").lower()
                 )
                 conta_id = int(linha["conta_id"])
