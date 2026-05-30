@@ -1,7 +1,8 @@
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.financial_panel.controller import router as financial_panel_router
+from app.expense_tracker.controller import router as expense_tracker_router
 
 
 async def lifespan(app: FastAPI):
@@ -9,7 +10,8 @@ async def lifespan(app: FastAPI):
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(lifespan=lifespan)
+    app = FastAPI(lifespan=lifespan, doc_url=None, redoc_url=None)
     app.mount("/static", StaticFiles(directory="static"), name="static")
-    app.include_router(financial_panel_router)
+    app.include_router(expense_tracker_router, prefix="/gastos")
+    app.get("/")(lambda: RedirectResponse(url="/gastos", status_code=302))
     return app

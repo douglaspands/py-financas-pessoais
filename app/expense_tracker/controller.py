@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Form, status
+from fastapi import APIRouter, Depends, Form, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from app.account import service as account_service
@@ -10,11 +10,15 @@ from app.infra.context import Context, get_context_from_request
 from app.transaction import service as transaction_service
 from app.transaction.enum import CategoriaTransacaoEnum
 
-router = APIRouter()
+router = APIRouter(tags=["gastos"])
 
 
 def mes_filtro_padrao() -> str:
     return date.today().strftime("%Y-%m")
+
+
+def obter_url_base(request: Request, prefix: str = "") -> str:
+    return request.url.path.replace(prefix, "").rstrip("/")
 
 
 @router.get("/")
@@ -26,9 +30,11 @@ async def index(
     transacoes = await transaction_service.listar_transacoes(ctx, mes_filtro=mes_filtro)
     return ctx.template.TemplateResponse(
         request=ctx.request,
-        name="index.html",
+        name="expense_tracker/index.html",
         context={
             "request": ctx.request,
+            "mes_filtro": mes_filtro,
+            "base_url": obter_url_base(ctx.request),  # Base URL para os formulários
             **transacoes,
         },
         status_code=status.HTTP_200_OK,
@@ -55,8 +61,10 @@ async def cadastrar_transacao(
             categoria=categoria,
             parcelas=parcelas,
         )
+    base_url = obter_url_base(ctx.request, "/nova-transacao")
     return RedirectResponse(
-        url=f"/?mes_filtro={mes_filtro}", status_code=status.HTTP_303_SEE_OTHER
+        url=f"{base_url}?mes_filtro={mes_filtro}",
+        status_code=status.HTTP_303_SEE_OTHER,
     )
 
 
@@ -69,8 +77,10 @@ async def deletar_transacao(
     mes_filtro = mes_filtro or mes_filtro_padrao()
     async with ctx.session.begin():
         await transaction_service.excluir_transacao(ctx, transacao_id=transacao_id)
+    base_url = obter_url_base(ctx.request, f"/deletar-transacao/{transacao_id}")
     return RedirectResponse(
-        url=f"/?mes_filtro={mes_filtro}", status_code=status.HTTP_303_SEE_OTHER
+        url=f"{base_url}?mes_filtro={mes_filtro}",
+        status_code=status.HTTP_303_SEE_OTHER,
     )
 
 
@@ -95,6 +105,8 @@ async def cadastrar_conta(
             dia_vencimento=dia_vencimento,
         )
     mes_filtro = mes_filtro or mes_filtro_padrao()
+    base_url = obter_url_base(ctx.request, "/nova-conta")
     return RedirectResponse(
-        url=f"/?mes_filtro={mes_filtro}", status_code=status.HTTP_303_SEE_OTHER
+        url=f"{base_url}?mes_filtro={mes_filtro}",
+        status_code=status.HTTP_303_SEE_OTHER,
     )

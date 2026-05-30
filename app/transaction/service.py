@@ -24,10 +24,15 @@ def calcular_fatura(data_compra: date, dia_fechamento: int) -> str:
 
 
 def proxima_data(data: date, dia: int) -> date:
+    ano = data.year + 1 if data.month == 12 else data.year
+    mes = 1 if data.month == 12 else data.month + 1
     try:
-        nova_data = data.replace(month=data.month + 1, day=dia)
+        nova_data = date(ano, mes, dia)
     except BaseException:
-        nova_data = (data.replace(month=data.month + 2, day=1)) - timedelta(days=1)
+        ano = ano + 1 if mes == 12 else ano
+        mes = 1 if mes == 12 else mes + 1
+        dia = 1
+        nova_data = (date(ano, mes, dia)) - timedelta(days=1)
     return nova_data
 
 
@@ -45,8 +50,9 @@ async def listar_transacoes(ctx: Context, *, mes_filtro: str) -> dict:
         resumo_contas[conta_nome] = resumo_contas.get(conta_nome, 0.0) + tx.valor
     return {
         "contas": contas,
-        "transacoes": sorted(transacoes, key=lambda tx: tx.data, reverse=True),
-        "mes_filtro": mes_filtro,
+        "transacoes": sorted(
+            transacoes, key=lambda tx: f"{tx.data}_{tx.created_at}", reverse=True
+        ),
         "total_mes": total_mes,
         "resumo_categorias": dict(
             sorted(resumo_categorias.items(), key=lambda item: item[1], reverse=True)
