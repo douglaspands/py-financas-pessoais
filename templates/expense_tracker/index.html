@@ -16,7 +16,7 @@
             <div class="box notification is-link is-light">
                 <div class="columns is-mobile is-multiline is-vcentered">
                     <div class="column is-12-mobile">
-                        <form method="GET" action="{{ base_url }}/">
+                        <form method="GET" action="{{ url_for('gastos:index') }}">
                             <label class="label is-small">Mês de Referência:</label>
                             <div class="field has-addons">
                                 <div class="control is-expanded">
@@ -93,7 +93,7 @@
                                     <h2 class="subtitle is-5 mb-0">Lançar Compra / Parcela 💸</h2>
                                     <button class="button is-small is-light" id="btn-form-tx">-</button>
                                 </div>
-                                <form id="conteudo-form-transacao" action="{{ base_url }}/nova-transacao?mes_filtro={{ mes_filtro }}" method="POST" class="mt-3">
+                                <form id="conteudo-form-transacao" action="{{ url_for('gastos:cadastrar_transacao') }}?mes_filtro={{ mes_filtro }}" method="POST" class="mt-3">
                                     <div class="field">
                                         <input class="input" type="text" name="descricao" placeholder="Ex: Mercado, Parcela Caixa" required>
                                     </div>
@@ -138,7 +138,7 @@
                                     <h2 class="subtitle is-5 mb-0">Cadastrar Conta / Cartão 🏦</h2>
                                     <button class="button is-small is-light" id="btn-form-conta">-</button>
                                 </div>
-                                <form id="conteudo-form-conta" action="{{ base_url }}/nova-conta?mes_filtro={{ mes_filtro }}" method="POST" class="mt-3">
+                                <form id="conteudo-form-conta" action="{{ url_for('gastos:cadastrar_conta') }}?mes_filtro={{ mes_filtro }}" method="POST" class="mt-3">
                                     <div class="field">
                                         <input class="input" type="text" name="nome" placeholder="Ex: Nubank" required>
                                     </div>
@@ -147,7 +147,6 @@
                                             <select name="tipo">
                                                 <option value="credito">Cartão de Crédito</option>
                                                 <option value="debito">Débito / Conta Corrente</option>
-                                                <option value="financiamento">Financiamento</option>
                                             </select>
                                         </div>
                                     </div>
@@ -195,7 +194,7 @@
                                         <td><small>{{ tx.conta.nome }}</small></td>
                                         <td class="has-text-danger has-text-right">{{ tx.valor|formatar_moeda }}</td>
                                         <td class="has-text-centered">
-                                        <form action="{{ base_url }}/deletar-transacao/{{ tx.id }}?mes_filtro={{ mes_filtro }}" method="POST" onsubmit="return confirm('Tem certeza que deseja apagar este lançamento?');">
+                                        <form action="{{ url_for('gastos:deletar_transacao', transacao_id=tx.id) }}?mes_filtro={{ mes_filtro }}" method="POST" onsubmit="return confirm('Tem certeza que deseja apagar este lançamento?');">
                                             <button type="submit" class="button is-danger is-small is-light">
                                                 🗑️
                                             </button>

@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Form, Request, status
+from fastapi import APIRouter, Depends, Form, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from app.account import service as account_service
@@ -10,18 +10,14 @@ from app.infra.context import Context, get_context_from_request
 from app.transaction import service as transaction_service
 from app.transaction.enum import CategoriaTransacaoEnum
 
-router = APIRouter(tags=["gastos"])
+router = APIRouter(tags=["gastos"], prefix="/gastos")
 
 
 def mes_filtro_padrao() -> str:
     return date.today().strftime("%Y-%m")
 
 
-def obter_url_base(request: Request, prefix: str = "") -> str:
-    return request.url.path.replace(prefix, "").rstrip("/")
-
-
-@router.get("/")
+@router.get("/", name="gastos:index", response_class=HTMLResponse)
 async def index(
     ctx: Context = Depends(get_context_from_request),
     mes_filtro: Optional[str] = None,
@@ -34,14 +30,13 @@ async def index(
         context={
             "request": ctx.request,
             "mes_filtro": mes_filtro,
-            "base_url": obter_url_base(ctx.request),  # Base URL para os formulários
             **transacoes,
         },
         status_code=status.HTTP_200_OK,
     )
 
 
-@router.post("/nova-transacao")
+@router.post("/nova-transacao", name="gastos:cadastrar_transacao")
 async def cadastrar_transacao(
     descricao: str = Form(...),
     valor: float = Form(...),
@@ -61,14 +56,13 @@ async def cadastrar_transacao(
             categoria=categoria,
             parcelas=parcelas,
         )
-    base_url = obter_url_base(ctx.request, "/nova-transacao")
     return RedirectResponse(
-        url=f"{base_url}?mes_filtro={mes_filtro}",
+        url=f"{ctx.request.url_for('gastos:index')!s}?mes_filtro={mes_filtro}",
         status_code=status.HTTP_303_SEE_OTHER,
     )
 
 
-@router.post("/deletar-transacao/{transacao_id}")
+@router.post("/deletar-transacao/{transacao_id}", name="gastos:deletar_transacao")
 async def deletar_transacao(
     transacao_id: int,
     mes_filtro: Optional[str] = None,
@@ -77,14 +71,13 @@ async def deletar_transacao(
     mes_filtro = mes_filtro or mes_filtro_padrao()
     async with ctx.session.begin():
         await transaction_service.excluir_transacao(ctx, transacao_id=transacao_id)
-    base_url = obter_url_base(ctx.request, f"/deletar-transacao/{transacao_id}")
     return RedirectResponse(
-        url=f"{base_url}?mes_filtro={mes_filtro}",
+        url=f"{ctx.request.url_for('gastos:index')!s}?mes_filtro={mes_filtro}",
         status_code=status.HTTP_303_SEE_OTHER,
     )
 
 
-@router.post("/nova-conta")
+@router.post("/nova-conta", name="gastos:cadastrar_conta")
 async def cadastrar_conta(
     nome: str = Form(...),
     tipo: TipoContaEnum = Form(...),
@@ -105,8 +98,7 @@ async def cadastrar_conta(
             dia_vencimento=dia_vencimento,
         )
     mes_filtro = mes_filtro or mes_filtro_padrao()
-    base_url = obter_url_base(ctx.request, "/nova-conta")
     return RedirectResponse(
-        url=f"{base_url}?mes_filtro={mes_filtro}",
+        url=f"{ctx.request.url_for('gastos:index')!s}?mes_filtro={mes_filtro}",
         status_code=status.HTTP_303_SEE_OTHER,
     )
