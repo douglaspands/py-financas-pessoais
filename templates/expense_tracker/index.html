@@ -1,237 +1,235 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle Financeiro</title>
-    <link rel="icon" type="image/png" href="{{ url_for('static', path='/img/favicon.png') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+{% extends 'base.html' %}
+{% block title %}Painel De Gastos{% endblock %}
+
+{% block style %}
     <link rel="stylesheet" href="{{ url_for('static', path='/css/expense_tracker/style.css') }}">
-</head>
-<body class="has-background-light">
-    <section class="section">
-        <div class="container">
-            <h1 class="title is-3 has-text-centered-mobile">Painel De Gastos 📊</h1>
-            
-            <div class="box notification is-link is-light">
-                <div class="columns is-mobile is-multiline is-vcentered">
-                    <div class="column is-12-mobile">
-                        <form method="GET" action="{{ url_for('gastos:index') }}">
-                            <label class="label is-small">Mês de Referência:</label>
-                            <div class="field has-addons">
-                                <div class="control is-expanded">
-                                    <input class="input" type="month" name="mes_filtro" value="{{ mes_filtro }}">
-                                </div>
-                                <div class="control">
-                                    <button class="button is-link" type="submit">Filtrar</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="column is-12-mobile has-text-right-tablet has-text-centered-mobile mt-2-mobile">
-                        <h2 class="subtitle is-6 mb-1">Total no Mês:</h2>
-                        <span class="title is-2 has-text-danger">{{ total_mes|formatar_moeda }}</span>
-                    </div>
-                </div>
-            </div>
+{% endblock %}
 
-            <div class="columns is-multiline">
-                <div class="column is-6-tablet is-12-mobile">
-                    <div class="box">
-                        <div class="card-header-toggle" onclick="toggleCard('conteudo-categoria', 'btn-cat')">
-                            <h3 class="subtitle is-5 mb-0">Gastos por Categoria</h3>
-                            <button class="button is-small is-light" id="btn-cat">-</button>
-                        </div>
-                        <div id="conteudo-categoria" class="table-container mt-3">
-                            <table class="table is-fullwidth is-narrow is-striped">
-                                <tbody>
-                                    {% for cat, total in resumo_categorias.items() %}
-                                    <tr>
-                                        <td><span class="tag is-info is-light">{{ cat }}</span></td>
-                                        <td class="has-text-right"><strong>{{ total|formatar_moeda }}</strong></td>
-                                    </tr>
-                                    {% else %}
-                                    <tr><td colspan="2" class="has-text-grey">Nenhum dado</td></tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="column is-6-tablet is-12-mobile">
-                    <div class="box">
-                        <div class="card-header-toggle" onclick="toggleCard('conteudo-conta', 'btn-conta')">
-                            <h3 class="subtitle is-5 mb-0">Por Conta/Cartão</h3>
-                            <button class="button is-small is-light" id="btn-conta">-</button>
-                        </div>
-                        <div id="conteudo-conta" class="table-container mt-3">
-                            <table class="table is-fullwidth is-narrow is-striped">
-                                <tbody>
-                                    {% for conta, total in resumo_contas.items() %}
-                                    <tr>
-                                        <td><strong>{{ conta }}</strong></td>
-                                        <td class="has-text-right has-text-danger"><strong>{{ total|formatar_moeda }}</strong></td>
-                                    </tr>
-                                    {% else %}
-                                    <tr><td colspan="2" class="has-text-grey">Nenhum dado</td></tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="columns is-multiline">
-                
-                <div class="column is-4-desktop is-12-tablet">
-                    <div class="columns is-multiline">
-                        <div class="column is-12">
-                            <div class="box">
-                                <div class="card-header-toggle" onclick="toggleCard('conteudo-form-transacao', 'btn-form-tx')">
-                                    <h2 class="subtitle is-5 mb-0">Lançar Compra / Recorrência 💸</h2>
-                                    <button class="button is-small is-light" id="btn-form-tx">-</button>
-                                </div>
-                                <form id="conteudo-form-transacao" action="{{ url_for('gastos:cadastrar_transacao') }}?mes_filtro={{ mes_filtro }}" method="POST" class="mt-3">
-                                    <div class="field">
-                                        <input class="input" type="text" name="descricao" placeholder="Ex: Mercado, Assinatura Netflix" required>
-                                    </div>
-                                    
-                                    <div class="field columns is-mobile mb-0">
-                                        <div class="column is-6">
-                                            <label class="label is-small">Valor (R$)</label>
-                                            <input class="input" type="number" step="0.01" name="valor" placeholder="0,00" required>
-                                        </div>
-                                        <div class="column is-6">
-                                            <label class="label is-small">Tipo</label>
-                                            <div class="select is-fullwidth">
-                                                <select name="tipo_transacao" id="tipo_transacao" onchange="atualizarCamposRepeticao()">
-                                                {% for tipo in tipos_transacao_disponiveis %}
-                                                    <option value="{{ tipo.value }}">{{ tipo.value|capitalize }}</option>
-                                                {% endfor %}
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="field" id="campo-repeticao" style="display: none;">
-                                        <label class="label is-small" id="label-repeticao">Quantidade de Meses</label>
-                                        <input class="input" type="number" name="quantidade_repeticoes" id="quantidade_repeticoes" value="1" min="1" placeholder="Ex: 12">
-                                    </div>
-                                    
-                                    <div class="field">
-                                        <label class="label is-small">Categoria</label>
-                                        <div class="select is-fullwidth">
-                                            <select name="categoria">
-                                                {% for cat in categorias_disponiveis %}
-                                                    <option value="{{ cat.value }}" {% if cat.name == 'OUTROS' %}selected{% endif %}>{{ cat.value|texto_capitalizado }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="field">
-                                        <label class="label is-small">Forma de Pagamento</label>
-                                        <div class="select is-fullwidth">
-                                            <select name="conta_id">
-                                                {% for conta in contas %}
-                                                    <option value="{{ conta.id }}">{{ conta.nome }} ({{ conta.tipo.value }})</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <button class="button is-link is-fullwidth" type="submit">Lançar Gasto</button>
-                                </form>
-                            </div>
-                        </div>
-
-                        <div class="column is-12">
-                            <div class="box">
-                                <div class="card-header-toggle" onclick="toggleCard('conteudo-form-conta', 'btn-form-conta')">
-                                    <h2 class="subtitle is-5 mb-0">Cadastrar Conta / Cartão 🏦</h2>
-                                    <button class="button is-small is-light" id="btn-form-conta">-</button>
-                                </div>
-                                <form id="conteudo-form-conta" action="{{ url_for('gastos:cadastrar_conta') }}?mes_filtro={{ mes_filtro }}" method="POST" class="mt-3">
-                                    <div class="field">
-                                        <input class="input" type="text" name="nome" placeholder="Ex: Nubank" required>
-                                    </div>
-                                    <div class="field">
-                                        <div class="select is-fullwidth">
-                                            <select name="tipo">
-                                                <option value="credito">Cartão de Crédito</option>
-                                                <option value="debito">Débito / Conta Corrente</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="field columns is-mobile">
-                                        <div class="column">
-                                            <input class="input" type="number" name="dia_fechamento" placeholder="Fech.">
-                                        </div>
-                                        <div class="column">
-                                            <input class="input" type="number" name="dia_vencimento" placeholder="Venc.">
-                                        </div>
-                                    </div>
-                                    <button class="button is-primary is-fullwidth" type="submit">Salvar Conta</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="column is-8-desktop is-12-tablet">
-                    <div class="box">
-                        <div class="card-header-toggle" onclick="toggleCard('conteudo-extrato', 'btn-extrato')">
-                            <div class="is-flex is-align-items-center"> 
-                                <h2 class="subtitle is-5 mb-0 mr-2">Extrato Detalhado: {{ mes_filtro }}</h2>
-                                <span class="tag is-rounded is-link is-light"><strong>{{ transacoes|length }}</strong></span>
-                            </div>
-                            <button class="button is-small is-light" id="btn-extrato">-</button>
-                        </div>
-                        <div id="conteudo-extrato" class="table-container mt-3">
-                            <table class="table is-fullwidth is-striped is-hoverable is-vcentered">
-                                <thead>
-                                    <tr>
-                                        <th>Data</th>
-                                        <th>Descrição</th>
-                                        <th>Categoria</th>
-                                        <th>Origem</th>
-                                        <th class="has-text-right">Valor</th>
-                                        <th class="has-text-centered">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for tx in transacoes %}
-                                    <tr>
-                                        <td><small>{{ tx.data }}</small></td>
-                                        <td><strong>{{ tx.descricao }}</strong></td>
-                                        <td><span class="tag is-light">{{ tx.categoria.value }}</span></td>
-                                        <td><small>{{ tx.conta.nome }}</small></td>
-                                        <td class="has-text-danger has-text-right">{{ tx.valor|formatar_moeda }}</td>
-                                        <td class="has-text-centered">
-                                            <form action="{{ url_for('gastos:deletar_transacao', transacao_id=tx.id) }}?mes_filtro={{ mes_filtro }}" method="POST" onsubmit="return confirm('Tem certeza que deseja apagar este lançamento?');">
-                                                <button type="submit" class="button is-danger is-small is-light">
-                                                    🗑️
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                    {% else %}
-                                    <tr>
-                                        <td colspan="6" class="has-text-centered has-text-grey">Nenhum lançamento.</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                
-            </div>
-
-        </div>
-    </section>
-
+{% block script %}
     <script src="{{ url_for('static', path='/js/expense_tracker/script.js') }}"></script>
-</body>
-</html>
+{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <h1 class="title is-3 has-text-centered-mobile">Painel De Gastos 📊</h1>
+        
+        <div class="box notification is-link is-light">
+            <div class="columns is-mobile is-multiline is-vcentered">
+                <div class="column is-12-mobile">
+                    <form method="GET" action="{{ url_for('gastos:index') }}">
+                        <label class="label is-small">Mês de Referência:</label>
+                        <div class="field has-addons">
+                            <div class="control is-expanded">
+                                <input class="input" type="month" name="mes_filtro" value="{{ mes_filtro }}">
+                            </div>
+                            <div class="control">
+                                <button class="button is-link" type="submit">Filtrar</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="column is-12-mobile has-text-right-tablet has-text-centered-mobile mt-2-mobile">
+                    <h2 class="subtitle is-6 mb-1">Total no Mês:</h2>
+                    <span class="title is-2 has-text-danger">{{ total_mes|formatar_moeda }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="columns is-multiline">
+            <div class="column is-6-tablet is-12-mobile">
+                <div class="box">
+                    <div class="card-header-toggle" onclick="toggleCard('conteudo-categoria', 'btn-cat')">
+                        <h3 class="subtitle is-5 mb-0">Gastos por Categoria</h3>
+                        <button class="button is-small is-light" id="btn-cat">-</button>
+                    </div>
+                    <div id="conteudo-categoria" class="table-container mt-3">
+                        <table class="table is-fullwidth is-narrow is-striped">
+                            <tbody>
+                                {% for cat, total in resumo_categorias.items() %}
+                                <tr>
+                                    <td><span class="tag is-info is-light">{{ cat }}</span></td>
+                                    <td class="has-text-right"><strong>{{ total|formatar_moeda }}</strong></td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="2" class="has-text-grey">Nenhum dado</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-6-tablet is-12-mobile">
+                <div class="box">
+                    <div class="card-header-toggle" onclick="toggleCard('conteudo-conta', 'btn-conta')">
+                        <h3 class="subtitle is-5 mb-0">Por Conta/Cartão</h3>
+                        <button class="button is-small is-light" id="btn-conta">-</button>
+                    </div>
+                    <div id="conteudo-conta" class="table-container mt-3">
+                        <table class="table is-fullwidth is-narrow is-striped">
+                            <tbody>
+                                {% for conta, total in resumo_contas.items() %}
+                                <tr>
+                                    <td><strong>{{ conta }}</strong></td>
+                                    <td class="has-text-right has-text-danger"><strong>{{ total|formatar_moeda }}</strong></td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="2" class="has-text-grey">Nenhum dado</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="columns is-multiline">
+            
+            <div class="column is-4-desktop is-12-tablet">
+                <div class="columns is-multiline">
+                    <div class="column is-12">
+                        <div class="box">
+                            <div class="card-header-toggle" onclick="toggleCard('conteudo-form-transacao', 'btn-form-tx')">
+                                <h2 class="subtitle is-5 mb-0">Lançar Compra / Recorrência 💸</h2>
+                                <button class="button is-small is-light" id="btn-form-tx">-</button>
+                            </div>
+                            <form id="conteudo-form-transacao" action="{{ url_for('gastos:cadastrar_transacao') }}?mes_filtro={{ mes_filtro }}" method="POST" class="mt-3">
+                                <div class="field">
+                                    <input class="input" type="text" name="descricao" placeholder="Ex: Mercado, Assinatura Netflix" required>
+                                </div>
+                                
+                                <div class="field columns is-mobile mb-0">
+                                    <div class="column is-6">
+                                        <label class="label is-small">Valor (R$)</label>
+                                        <input class="input" type="number" step="0.01" name="valor" placeholder="0,00" required>
+                                    </div>
+                                    <div class="column is-6">
+                                        <label class="label is-small">Tipo</label>
+                                        <div class="select is-fullwidth">
+                                            <select name="tipo_transacao" id="tipo_transacao" onchange="atualizarCamposRepeticao()">
+                                            {% for tipo in tipos_transacao_disponiveis %}
+                                                <option value="{{ tipo.value }}">{{ tipo.value|capitalize }}</option>
+                                            {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="field" id="campo-repeticao" style="display: none;">
+                                    <label class="label is-small" id="label-repeticao">Quantidade de Meses</label>
+                                    <input class="input" type="number" name="quantidade_repeticoes" id="quantidade_repeticoes" value="1" min="1" placeholder="Ex: 12">
+                                </div>
+                                
+                                <div class="field">
+                                    <label class="label is-small">Categoria</label>
+                                    <div class="select is-fullwidth">
+                                        <select name="categoria">
+                                            {% for cat in categorias_disponiveis %}
+                                                <option value="{{ cat.value }}" {% if cat.name == 'OUTROS' %}selected{% endif %}>{{ cat.value|texto_capitalizado }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="field">
+                                    <label class="label is-small">Forma de Pagamento</label>
+                                    <div class="select is-fullwidth">
+                                        <select name="conta_id">
+                                            {% for conta in contas %}
+                                                <option value="{{ conta.id }}">{{ conta.nome }} ({{ conta.tipo.value }})</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <button class="button is-link is-fullwidth" type="submit">Lançar Gasto</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="column is-12">
+                        <div class="box">
+                            <div class="card-header-toggle" onclick="toggleCard('conteudo-form-conta', 'btn-form-conta')">
+                                <h2 class="subtitle is-5 mb-0">Cadastrar Conta / Cartão 🏦</h2>
+                                <button class="button is-small is-light" id="btn-form-conta">-</button>
+                            </div>
+                            <form id="conteudo-form-conta" action="{{ url_for('gastos:cadastrar_conta') }}?mes_filtro={{ mes_filtro }}" method="POST" class="mt-3">
+                                <div class="field">
+                                    <input class="input" type="text" name="nome" placeholder="Ex: Nubank" required>
+                                </div>
+                                <div class="field">
+                                    <div class="select is-fullwidth">
+                                        <select name="tipo">
+                                            <option value="credito">Cartão de Crédito</option>
+                                            <option value="debito">Débito / Conta Corrente</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="field columns is-mobile">
+                                    <div class="column">
+                                        <input class="input" type="number" name="dia_fechamento" placeholder="Fech.">
+                                    </div>
+                                    <div class="column">
+                                        <input class="input" type="number" name="dia_vencimento" placeholder="Venc.">
+                                    </div>
+                                </div>
+                                <button class="button is-primary is-fullwidth" type="submit">Salvar Conta</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column is-8-desktop is-12-tablet">
+                <div class="box">
+                    <div class="card-header-toggle" onclick="toggleCard('conteudo-extrato', 'btn-extrato')">
+                        <div class="is-flex is-align-items-center"> 
+                            <h2 class="subtitle is-5 mb-0 mr-2">Extrato Detalhado: {{ mes_filtro }}</h2>
+                            <span class="tag is-rounded is-link is-light"><strong>{{ transacoes|length }}</strong></span>
+                        </div>
+                        <button class="button is-small is-light" id="btn-extrato">-</button>
+                    </div>
+                    <div id="conteudo-extrato" class="table-container mt-3">
+                        <table class="table is-fullwidth is-striped is-hoverable is-vcentered">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Descrição</th>
+                                    <th>Categoria</th>
+                                    <th>Origem</th>
+                                    <th class="has-text-right">Valor</th>
+                                    <th class="has-text-centered">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tx in transacoes %}
+                                <tr>
+                                    <td><small>{{ tx.data }}</small></td>
+                                    <td><strong>{{ tx.descricao }}</strong></td>
+                                    <td><span class="tag is-light">{{ tx.categoria.value }}</span></td>
+                                    <td><small>{{ tx.conta.nome }}</small></td>
+                                    <td class="has-text-danger has-text-right">{{ tx.valor|formatar_moeda }}</td>
+                                    <td class="has-text-centered">
+                                        <form action="{{ url_for('gastos:deletar_transacao', transacao_id=tx.id) }}?mes_filtro={{ mes_filtro }}" method="POST" onsubmit="return confirm('Tem certeza que deseja apagar este lançamento?');">
+                                            <button type="submit" class="button is-danger is-small is-light">
+                                                🗑️
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="has-text-centered has-text-grey">Nenhum lançamento.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+    </div>
+</section>
+{% endblock %}
