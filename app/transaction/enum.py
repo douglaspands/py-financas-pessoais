@@ -30,3 +30,9 @@ class CategoriaTransacaoEnum(StrEnum):
     TAG_VEICULO = "tag_veiculo"
     TRABALHO = "trabalho"
     OUTROS = "outros"
+
+
+class TipoTransacaoEnum(StrEnum):
+    UNICA = "unica"
+    PARCELADA = "parcelada"
+    RECORRENTE = "recorrente"

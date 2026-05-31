@@ -8,7 +8,7 @@ from app.account import service as account_service
 from app.account.enum import TipoContaEnum
 from app.infra.context import Context, get_context_from_request
 from app.transaction import service as transaction_service
-from app.transaction.enum import CategoriaTransacaoEnum
+from app.transaction.enum import CategoriaTransacaoEnum, TipoTransacaoEnum
 
 router = APIRouter(tags=["gastos"], prefix="/gastos")
 
@@ -30,6 +30,8 @@ async def index(
         context={
             "request": ctx.request,
             "mes_filtro": mes_filtro,
+            "categorias_disponiveis": sorted(CategoriaTransacaoEnum),
+            "tipos_transacao_disponiveis": sorted(TipoTransacaoEnum),
             **transacoes,
         },
         status_code=status.HTTP_200_OK,
@@ -40,9 +42,10 @@ async def index(
 async def cadastrar_transacao(
     descricao: str = Form(...),
     valor: float = Form(...),
+    tipo_transacao: TipoTransacaoEnum = Form(...),  # "unica", "parcelada", "recorrente"
+    quantidade_repeticoes: int = Form(1),
     conta_id: int = Form(...),
     categoria: CategoriaTransacaoEnum = Form(...),  # Recebe a categoria do form
-    parcelas: int = Form(1),
     mes_filtro: Optional[str] = None,
     ctx: Context = Depends(get_context_from_request),
 ) -> RedirectResponse:
@@ -52,9 +55,10 @@ async def cadastrar_transacao(
             ctx,
             descricao=descricao,
             valor=valor,
+            tipo=tipo_transacao,
+            quantidade_repeticoes=quantidade_repeticoes,
             conta_id=conta_id,
             categoria=categoria,
-            parcelas=parcelas,
         )
     return RedirectResponse(
         url=f"{ctx.request.url_for('gastos:index')!s}?mes_filtro={mes_filtro}",
@@ -71,6 +75,24 @@ async def deletar_transacao(
     mes_filtro = mes_filtro or mes_filtro_padrao()
     async with ctx.session.begin():
         await transaction_service.excluir_transacao(ctx, transacao_id=transacao_id)
+    return RedirectResponse(
+        url=f"{ctx.request.url_for('gastos:index')!s}?mes_filtro={mes_filtro}",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post(
+    "/editar-valor-transacao/{transacao_id}", name="gastos:editar_valor_transacao"
+)
+async def editar_valor_transacao(
+    transacao_id: int,
+    novo_valor: float = Form(...),
+    mes_filtro: Optional[str] = None,
+    ctx: Context = Depends(get_context_from_request),
+) -> RedirectResponse:
+    mes_filtro = mes_filtro or mes_filtro_padrao()
+    # async with ctx.session.begin():
+    #     await transaction_service.editar_valor_transacao(ctx, transacao_id=transacao_id, novo_valor=novo_valor)
     return RedirectResponse(
         url=f"{ctx.request.url_for('gastos:index')!s}?mes_filtro={mes_filtro}",
         status_code=status.HTTP_303_SEE_OTHER,

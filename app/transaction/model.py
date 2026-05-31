@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel
 
-from app.transaction.enum import CategoriaTransacaoEnum
+from app.transaction.enum import CategoriaTransacaoEnum, TipoTransacaoEnum
 
 if TYPE_CHECKING:
     from app.account.model import Conta
@@ -22,6 +22,7 @@ class Transacao(SQLModel, table=True):
     fatura_mes: Optional[str] = Field(default=None)
 
     categoria: CategoriaTransacaoEnum = Field(default=CategoriaTransacaoEnum.OUTROS)
+    tipo: TipoTransacaoEnum = Field(default=TipoTransacaoEnum.UNICA)
 
     conta_id: int = Field(foreign_key="conta.id")
     conta: "Conta" = Relationship(back_populates="transacoes")

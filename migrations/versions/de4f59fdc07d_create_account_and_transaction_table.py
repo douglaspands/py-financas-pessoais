@@ -1,8 +1,8 @@
 """create account and transaction table
 
-Revision ID: a01f6c4908aa
+Revision ID: de4f59fdc07d
 Revises:
-Create Date: 2026-05-30 00:50:56.221553
+Create Date: 2026-05-31 14:21:26.995760
 
 """
 
@@ -13,7 +13,7 @@ import sqlmodel
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "a01f6c4908aa"
+revision: str = "de4f59fdc07d"
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -27,9 +27,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("nome", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column(
-            "tipo",
-            sa.Enum("DEBITO", "CREDITO", name="tipocontaenum"),
-            nullable=False,
+            "tipo", sa.Enum("DEBITO", "CREDITO", name="tipocontaenum"), nullable=False
         ),
         sa.Column("limite_ou_total", sa.Float(), nullable=True),
         sa.Column("dia_fechamento", sa.Integer(), nullable=True),
@@ -79,6 +77,11 @@ def upgrade() -> None:
                 "OUTROS",
                 name="categoriatransacaoenum",
             ),
+            nullable=False,
+        ),
+        sa.Column(
+            "tipo",
+            sa.Enum("UNICA", "PARCELADA", "RECORRENTE", name="tipotransacaoenum"),
             nullable=False,
         ),
         sa.Column("conta_id", sa.Integer(), nullable=False),

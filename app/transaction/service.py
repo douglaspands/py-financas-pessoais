@@ -1,15 +1,16 @@
 import csv
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from pathlib import Path
 
 import typer
+from dateutil.relativedelta import relativedelta
 
 from app.account import service as account_service
 from app.account.enum import TipoContaEnum
 from app.infra import utils
 from app.infra.context import Context
 from app.transaction import repository
-from app.transaction.enum import CategoriaTransacaoEnum
+from app.transaction.enum import CategoriaTransacaoEnum, TipoTransacaoEnum
 from app.transaction.model import Transacao
 
 
@@ -17,23 +18,7 @@ def calcular_fatura(data_compra: date, dia_fechamento: int) -> str:
     if data_compra.day < dia_fechamento:
         return data_compra.strftime("%Y-%m")
     else:
-        ano, mes = data_compra.year, data_compra.month + 1
-        if mes > 12:
-            mes, ano = 1, ano + 1
-        return f"{ano}-{mes:02d}"
-
-
-def proxima_data(data: date, dia: int) -> date:
-    ano = data.year + 1 if data.month == 12 else data.year
-    mes = 1 if data.month == 12 else data.month + 1
-    try:
-        nova_data = date(ano, mes, dia)
-    except BaseException:
-        ano = ano + 1 if mes == 12 else ano
-        mes = 1 if mes == 12 else mes + 1
-        dia = 1
-        nova_data = (date(ano, mes, dia)) - timedelta(days=1)
-    return nova_data
+        return (data_compra + relativedelta(months=1)).strftime("%Y-%m")
 
 
 async def listar_transacoes(ctx: Context, *, mes_filtro: str) -> dict:
@@ -66,9 +51,10 @@ async def cadastrar_transacao(
     *,
     descricao: str,
     valor: float,
+    tipo: TipoTransacaoEnum,
+    quantidade_repeticoes: int,
     conta_id: int,
     categoria: CategoriaTransacaoEnum,
-    parcelas: int,
     data: date | None = None,
 ) -> str:
     conta = await account_service.obter_conta(ctx, pk=conta_id)
@@ -76,27 +62,30 @@ async def cadastrar_transacao(
         raise ValueError(f"Conta com ID {conta_id} não encontrada")
 
     data = data or date.today()
-    dia = data.day
-    valor_parcela = valor / parcelas
+    valor_parcela = valor / quantidade_repeticoes
 
-    data_parcela = data
     grupo_id: int | None = None
-    for i in range(parcelas):
-        data_parcela = data_parcela if i == 0 else proxima_data(data_parcela, dia)
+    for i in range(quantidade_repeticoes):
+        data_parcela = data + relativedelta(months=i)
 
         if conta.tipo == TipoContaEnum.CREDITO and conta.dia_fechamento:
             fatura = calcular_fatura(data_parcela, conta.dia_fechamento)
         else:
             fatura = data_parcela.strftime("%Y-%m")
 
-        desc_final = f"{descricao} ({i + 1}/{parcelas})" if parcelas > 1 else descricao
+        desc_final = (
+            f"{descricao} ({i + 1}/{quantidade_repeticoes})"
+            if quantidade_repeticoes > 1
+            else descricao
+        )
 
         nova_tx = Transacao(
             descricao=desc_final,
             valor=valor_parcela,
-            data=data,
+            data=data_parcela,
             fatura_mes=fatura,
             categoria=categoria,
+            tipo=tipo,
             conta_id=conta_id,
             grupo_id=grupo_id,
         )
@@ -149,7 +138,10 @@ async def importar_transacoes_csv(ctx: Context, *, arquivo: Path) -> tuple[int, 
                     valor=valor_total,
                     conta_id=conta_id,
                     categoria=categoria,
-                    parcelas=parcelas,
+                    tipo=TipoTransacaoEnum.PARCELADA
+                    if parcelas > 1
+                    else TipoTransacaoEnum.UNICA,
+                    quantidade_repeticoes=parcelas,
                     data=data,
                 )
                 contagem_insercoes += parcelas

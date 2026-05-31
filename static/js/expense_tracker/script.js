@@ -42,3 +42,24 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+
+// Função para atualizar os campos de repetição com base no tipo de transação selecionado
+function atualizarCamposRepeticao() {
+    const tipo = document.getElementById('tipo_transacao').value;
+    const campoRepeticao = document.getElementById('campo-repeticao');
+    const labelRepeticao = document.getElementById('label-repeticao');
+    const inputRepeticao = document.getElementById('quantidade_repeticoes');
+
+    if (tipo === 'unica') {
+        campoRepeticao.style.display = 'none';
+        inputRepeticao.value = "1";
+    } else if (tipo === 'parcelada') {
+        campoRepeticao.style.display = 'block';
+        labelRepeticao.innerText = 'Quantidade de Parcelas';
+        inputRepeticao.placeholder = 'Ex: 12';
+    } else if (tipo === 'recorrente') {
+        campoRepeticao.style.display = 'block';
+        labelRepeticao.innerText = 'Repetir por quantos meses?';
+        inputRepeticao.placeholder = 'Ex: 6 (vazio para ilimitado)';
+    }
+}
