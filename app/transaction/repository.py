@@ -1,13 +1,14 @@
 from datetime import datetime, timezone
+from typing import Any
 
-from sqlmodel import delete, insert, select
+from sqlmodel import delete, insert, select, update
 
 from app.infra.context import Context
 from app.transaction.model import Transacao
 
 
-async def listar_transacoes(ctx: Context, *, mes_filtro: str) -> list[Transacao]:
-    stmt = select(Transacao).where(Transacao.fatura_mes == mes_filtro)
+async def listar_transacoes(ctx: Context, **kwargs: Any) -> list[Transacao]:
+    stmt = select(Transacao).filter_by(**kwargs)
     result = await ctx.session.exec(stmt)
     return list(result.all())
 
@@ -25,13 +26,19 @@ async def obter_transacao(ctx: Context, *, pk: int) -> Transacao | None:
     return result.first()
 
 
+async def atualizar_transacao(ctx: Context, *, pk: int, **kwargs: Any) -> None:
+    kwargs["updated_at"] = datetime.now(timezone.utc)
+    stmt = update(Transacao).where(Transacao.id == pk).values(**kwargs)
+    await ctx.session.exec(stmt)
+
+
 async def excluir_transacao(ctx: Context, *, pk: int):
     stmt = delete(Transacao).where(Transacao.id == pk)
     await ctx.session.exec(stmt)
 
 
-async def excluir_grupo_transacoes(ctx: Context, *, grupo_id: int):
-    stmt = delete(Transacao).where(Transacao.grupo_id == grupo_id)
+async def excluir_transacoes(ctx: Context, **kwargs: Any):
+    stmt = delete(Transacao).filter_by(**kwargs)
     await ctx.session.exec(stmt)
 
 

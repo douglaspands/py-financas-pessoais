@@ -1,0 +1,58 @@
+<div class="modal" id="modal-editar-transacao">
+    <div class="modal-background" onclick="fecharModalEditar()"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Editar Transação ✏️</p>
+            <button class="delete" aria-label="close" onclick="fecharModalEditar()"></button>
+        </header>
+        <form id="form-editar-transacao" method="POST" action="">
+            <section class="modal-card-body">
+                
+                <div class="field">
+                    <label class="label is-small">Descrição</label>
+                    <input class="input" type="text" name="descricao" id="edit-descricao" required>
+                </div>
+                
+                <div class="field">
+                    <label class="label is-small">Valor (R$)</label>
+                    <input class="input" type="number" step="0.01" name="valor" id="edit-valor" required>
+                </div>
+                
+                <div class="field">
+                    <label class="label is-small">Categoria</label>
+                    <div class="select is-fullwidth">
+                        <select name="categoria" id="edit-categoria">
+                            {% for cat in categorias_disponiveis %}
+                                <option value="{{ cat.value }}">{{ cat.value|texto_capitalizado }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label is-small">Forma de Pagamento</label>
+                    <div class="select is-fullwidth">
+                        <select name="conta_id" id="edit-conta">
+                            {% for conta in contas %}
+                                <option value="{{ conta.id }}">{{ conta.nome }} ({{ conta.tipo.value }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div id="modal-alterar-recorrencias" class="field">
+                    <label class="label is-small">Alterar próximas recorrências</label>
+                    <div class="select is-fullwidth">
+                        <select name="prox_recorrencias" id="edit-prox-recorrencias">
+                            <option value="0" selected>Não</option>
+                            <option value="1">Sim</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+            <footer class="modal-card-foot justify-content-end">
+                <button type="button" class="button" onclick="fecharModalEditar()">Cancelar</button>
+                <button type="submit" class="button is-link">Salvar Alterações</button>
+            </footer>
+        </form>
+    </div>
+</div>
+<script src="{{ url_for('static', path='/js/expense_tracker/model_transaction_edit.js') }}"></script>

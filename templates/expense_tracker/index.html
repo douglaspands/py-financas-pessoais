@@ -210,11 +210,24 @@
                                     <td><small>{{ tx.conta.nome }}</small></td>
                                     <td class="has-text-danger has-text-right">{{ tx.valor|formatar_moeda }}</td>
                                     <td class="has-text-centered">
-                                        <form action="{{ url_for('gastos:deletar_transacao', transacao_id=tx.id) }}?mes_filtro={{ mes_filtro }}" method="POST" onsubmit="return confirm('Tem certeza que deseja apagar este lançamento?');">
-                                            <button type="submit" class="button is-danger is-small is-light">
-                                                🗑️
+                                        <div class="buttons is-centered">
+                                            <button type="button" class="button is-warning is-small is-light" 
+                                                    onclick="abrirModalEditar({
+                                                        id: '{{ tx.id }}',
+                                                        descricao: '{{ tx.descricao }}',
+                                                        valor: '{{ tx.valor }}',
+                                                        categoria: '{{ tx.categoria.value }}',
+                                                        conta_id: '{{ tx.conta.id }}',
+                                                        tipo: '{{ tx.tipo.value }}'
+                                                    })">
+                                                ✏️
                                             </button>
-                                        </form>
+                                            <form action="{{ url_for('gastos:deletar_transacao', transacao_id=tx.id) }}?mes_filtro={{ mes_filtro }}" method="POST" onsubmit="return confirm('Tem certeza que deseja apagar este lançamento?');" style="display: inline;">
+                                                <button type="submit" class="button is-danger is-small is-light">
+                                                    🗑️
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% else %}
@@ -232,4 +245,5 @@
 
     </div>
 </section>
+{% include 'includes/modal_transaction_edit.html' %}
 {% endblock %}

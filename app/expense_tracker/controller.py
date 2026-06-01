@@ -81,18 +81,28 @@ async def deletar_transacao(
     )
 
 
-@router.post(
-    "/editar-valor-transacao/{transacao_id}", name="gastos:editar_valor_transacao"
-)
-async def editar_valor_transacao(
+@router.post("/editar-transacao/{transacao_id}", name="gastos:editar_valor_transacao")
+async def editar_transacao(
     transacao_id: int,
-    novo_valor: float = Form(...),
+    descricao: str = Form(...),
+    valor: float = Form(...),
+    categoria: CategoriaTransacaoEnum = Form(...),
+    conta_id: int = Form(...),
+    prox_recorrencias: bool = Form(False),
     mes_filtro: Optional[str] = None,
     ctx: Context = Depends(get_context_from_request),
 ) -> RedirectResponse:
     mes_filtro = mes_filtro or mes_filtro_padrao()
-    # async with ctx.session.begin():
-    #     await transaction_service.editar_valor_transacao(ctx, transacao_id=transacao_id, novo_valor=novo_valor)
+    async with ctx.session.begin():
+        await transaction_service.editar_transacao(
+            ctx,
+            transacao_id=transacao_id,
+            descricao=descricao,
+            valor=valor,
+            categoria=categoria,
+            conta_id=conta_id,
+            prox_recorrencias=prox_recorrencias,
+        )
     return RedirectResponse(
         url=f"{ctx.request.url_for('gastos:index')!s}?mes_filtro={mes_filtro}",
         status_code=status.HTTP_303_SEE_OTHER,

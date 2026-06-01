@@ -23,7 +23,7 @@ def calcular_fatura(data_compra: date, dia_fechamento: int) -> str:
 
 async def listar_transacoes(ctx: Context, *, mes_filtro: str) -> dict:
     contas = await account_service.listar_contas(ctx)
-    transacoes = await repository.listar_transacoes(ctx, mes_filtro=mes_filtro)
+    transacoes = await repository.listar_transacoes(ctx, fatura_mes=mes_filtro)
     total_mes = 0.0
     resumo_categorias = {}
     resumo_contas = {}
@@ -99,10 +99,57 @@ async def excluir_transacao(ctx: Context, *, transacao_id: int):
     transacao = await repository.obter_transacao(ctx, pk=transacao_id)
     if not transacao:
         raise ValueError(f"Transação com ID {transacao_id} não encontrada")
-    await repository.excluir_transacao(ctx, pk=transacao.id)
-    await repository.excluir_grupo_transacoes(
-        ctx, grupo_id=transacao.grupo_id or transacao.id
-    )
+    transacoes = [transacao]
+    if transacao.tipo in (TipoTransacaoEnum.PARCELADA, TipoTransacaoEnum.RECORRENTE):
+        trs = await repository.listar_transacoes(
+            ctx, grupo_id=transacao.grupo_id or transacao.id
+        )
+        if transacao.tipo == TipoTransacaoEnum.RECORRENTE:
+            for tx in sorted(trs, key=lambda tx: tx.id):
+                if tx.id > transacao.id:
+                    transacoes.append(tx)
+
+    for tx in transacoes:
+        await repository.excluir_transacao(ctx, pk=tx.id)
+
+
+async def editar_transacao(
+    ctx: Context,
+    *,
+    transacao_id: int,
+    descricao: str,
+    valor: float,
+    categoria: CategoriaTransacaoEnum,
+    conta_id: int,
+    prox_recorrencias: bool,
+):
+    transacao = await repository.obter_transacao(ctx, pk=transacao_id)
+    if not transacao:
+        raise ValueError(f"Transação com ID {transacao_id} não encontrada")
+    transacoes = [transacao]
+    if prox_recorrencias:
+        trs = await repository.listar_transacoes(
+            ctx, grupo_id=transacao.grupo_id or transacao.id
+        )
+        for tx in sorted(trs, key=lambda tx: tx.id):
+            if tx.id > transacao.id:
+                transacoes.append(tx)
+    for tx in transacoes:
+        parcela_desc = f" ({tx.descricao.split('(')[-1]}" if "(" in tx.descricao else ""
+        desc = "".join(descricao.split("(")[:-1]).strip()
+        _pk = tx.id
+        _descricao = desc + parcela_desc
+        _valor = valor
+        _categoria = categoria
+        _conta_id = conta_id
+        await repository.atualizar_transacao(
+            ctx,
+            pk=_pk,
+            descricao=_descricao,
+            valor=_valor,
+            categoria=_categoria,
+            conta_id=_conta_id,
+        )
 
 
 async def limpar_transacoes(ctx: Context):
